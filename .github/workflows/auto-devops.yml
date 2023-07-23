@@ -45,6 +45,9 @@ env:
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
   DOCKER_ENABLED: ${{ inputs.docker_enabled }}
   HELM_ENABLED: ${{ inputs.helm_enabled }}
+  YARNRC: ${{ vars.YARNRC }}
+  NPMRC: ${{ vars.NPMRC }}
+  MAVEN_SETTINGS: ${{ vars.MAVEN_SETTINGS }}
 
 jobs:
   build:

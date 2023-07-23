@@ -26,19 +26,15 @@ runs:
       if: ${{ env.NODE_PACKAGE_MANAGEMENT == 'npm' }}
       shell: bash
       run: echo $NPMRC > ~/.npmrc
-      env:
-        NPMRC: ${{ vars.NPMRC }}
 
     - name: Create .yarnrc.yml
       if: ${{ env.NODE_PACKAGE_MANAGEMENT == 'yarn' }}
       shell: bash
       run: echo $YARNRC > ~/.yarnrc.yml
-      env:
-        YARNRC: ${{ vars.YARNRC }}
 
     - name: Set up CodeArtifact Authorization Token
       shell: bash
-      run: RocketBus/actions/.github/actions/utils-codeartifact@v1
+      uses: RocketBus/actions/.github/actions/utils-codeartifact@v1
       with:
         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
