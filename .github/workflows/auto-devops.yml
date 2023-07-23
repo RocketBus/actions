@@ -48,6 +48,9 @@ env:
   YARNRC: ${{ vars.YARNRC }}
   NPMRC: ${{ vars.NPMRC }}
   MAVEN_SETTINGS: ${{ vars.MAVEN_SETTINGS }}
+  HELM_VERSION: ${{ vars.HELM_VERSION }}
+  ECR_REGION: ${{ vars.ECR_REGION }}
+  HELM_REGISTRY_REGION: ${{ vars.HELM_REGISTRY_REGION }}
 
 jobs:
   build:

@@ -13,7 +13,6 @@ runs:
         overwrite-settings: false
 
     - name: Set up CodeArtifact Authorization Token
-      shell: bash
       uses: RocketBus/workflows-templates/.github/actions/utils-codeartifact@v1
       with:
         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}

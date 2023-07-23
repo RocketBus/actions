@@ -33,7 +33,6 @@ runs:
       run: echo $YARNRC > ~/.yarnrc.yml
 
     - name: Set up CodeArtifact Authorization Token
-      shell: bash
       uses: RocketBus/actions/.github/actions/utils-codeartifact@v1
       with:
         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}

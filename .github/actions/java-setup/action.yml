@@ -15,11 +15,8 @@ runs:
     - name: Create settings.xml
       shell: bash
       run: echo $MAVEN_SETTINGS > ~/.m2/settings.xml
-      env:
-        MAVEN_SETTINGS: ${{ vars.MAVEN_SETTINGS }}
 
     - name: Set up CodeArtifact Authorization Token
-      shell: bash
       uses: RocketBus/workflows-templates/.github/actions/utils-codeartifact@v1
       with:
         aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
