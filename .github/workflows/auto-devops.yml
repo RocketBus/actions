@@ -3,7 +3,38 @@ name: AutoDevOps CI
 on:
   workflow_call:
     inputs:
+      buildpack:
+        type: string
+        required: true
+      node_version:
+        type: string
+        required: false
+        default: 18
+      node_package_management:
+        type: string
+        required: false
+        default: yarn
+      jdk_version:
+        type: string
+        required: false
+        default: 17
     secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      sonar_token:
+        required: true
+
+env:
+  BUILDPACK: ${{ inputs.buildpack }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+  NODE_VERSION: ${{ inputs.node_version }}
+  NODE_PACKAGE_MANAGEMENT: ${{ inputs.node_package_management }}
+  JDK_VERSION: ${{ inputs.jdk_version }}
+  MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
+  MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
 
 jobs:
   build:
@@ -32,7 +63,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v0
 
       - name: Build
-        run: RocketBus/actions/.github/actions/composite/build@v2
+        run: RocketBus/actions/.github/actions/composite/build@v1
 
   test:
     name: Test
@@ -44,7 +75,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test
-        run: RocketBus/actions/.github/actions/composite/test@v2
+        run: RocketBus/actions/.github/actions/composite/test@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.sonar_token }}
 
       - name: SonarQube Quality Gate
         uses: sonarsource/sonarqube-quality-gate-action@master
@@ -53,16 +86,16 @@ jobs:
           SONAR_TOKEN: ${{ secrets.sonar_token }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
  
-  release:
-    name: Release
-    if: ${{ github.ref_name == github.event.repository.default_branch }}
-    runs-on: actions-runner-set
-    needs:
-      - build
-      - test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # release:
+  #   name: Release
+  #   if: ${{ github.ref_name == github.event.repository.default_branch }}
+  #   runs-on: actions-runner-set
+  #   needs:
+  #     - build
+  #     - test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Release
-        run: RocketBus/actions/.github/actions/composite/release@v2
+  #     - name: Release
+  #       run: RocketBus/actions/.github/actions/composite/release@v1

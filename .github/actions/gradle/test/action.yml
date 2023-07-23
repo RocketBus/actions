@@ -10,9 +10,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Gradle
-      uses: RocketBus/actions/.github/actions/gradle/setup@v2
-      with:
-        java-version: ${{ inputs.jdk_version }}
+      uses: RocketBus/actions/.github/actions/gradle/setup@v1
 
     - name: Run Tests
       shell: bash

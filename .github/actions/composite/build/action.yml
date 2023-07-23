@@ -1,27 +1,25 @@
 name: 'Build'
 description: 'Build Artifact'
 
-inputs: {}
-
 runs:
   using: "composite"
   steps:
     - name: Build
-      if: ${{ inputs.buildpack == 'nodejs' }}
-      uses: RocketBus/actions/.github/actions/nodejs/build@v2
+      if: ${{ env.BUILDPACK == 'nodejs' }}
+      uses: RocketBus/actions/.github/actions/nodejs/build@v1
 
     - name: Build
-      if: ${{ inputs.buildpack == 'java' }}
-      uses: RocketBus/actions/.github/actions/java/build@v2
+      if: ${{ env.BUILDPACK == 'java' }}
+      uses: RocketBus/actions/.github/actions/java/build@v1
 
     - name: Build
-      if: ${{ inputs.buildpack == 'gradle' }}
-      uses: RocketBus/actions/.github/actions/gradle/build@v2
+      if: ${{ env.BUILDPACK == 'gradle' }}
+      uses: RocketBus/actions/.github/actions/gradle/build@v1
 
     - name: Build Docker
-      if: ${{ inputs.docker_enabled }}
-      uses: RocketBus/actions/.github/actions/docker/build@v2
+      if: ${{ env.DOCKER_ENABLED }}
+      uses: RocketBus/actions/.github/actions/docker/build@v1
 
     - name: Build Helm
-      if: ${{ inputs.helm_enabled }}
-      uses: RocketBus/actions/.github/actions/helm/build@v2
+      if: ${{ env.HELM_ENABLED }}
+      uses: RocketBus/actions/.github/actions/helm/build@v1

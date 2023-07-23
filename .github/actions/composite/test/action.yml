@@ -21,19 +21,19 @@ runs:
         echo "args=$SONAR_PARAMETERS" >> $GITHUB_OUTPUT
 
     - name: Test
-      if: ${{ inputs.buildpack == 'nodejs' }}
-      uses: RocketBus/actions/.github/actions/nodejs/test@v2
+      if: ${{ env.BUILDPACK == 'nodejs' }}
+      uses: RocketBus/actions/.github/actions/nodejs/test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}
 
     - name: Test
-      if: ${{ inputs.buildpack == 'java' }}
-      uses: RocketBus/actions/.github/actions/java/test@v2
+      if: ${{ env.BUILDPACK == 'java' }}
+      uses: RocketBus/actions/.github/actions/java/test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}
 
     - name: Test
-      if: ${{ inputs.buildpack == 'gradle' }}
-      uses: RocketBus/actions/.github/actions/gradle/test@v2
+      if: ${{ env.BUILDPACK == 'gradle' }}
+      uses: RocketBus/actions/.github/actions/gradle/test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}

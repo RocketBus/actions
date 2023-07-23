@@ -1,15 +1,11 @@
 name: 'Maven Build'
 description: ''
 
-inputs: {}
-
 runs:
   using: "composite"
   steps:
     - name: Set up Maven
-      uses: RocketBus/actions/.github/actions/maven/setup@v2
-      with:
-        java-version: ${{ inputs.jdk_version }}
+      uses: RocketBus/actions/.github/actions/maven/setup@v1
 
     - name: Lint
       shell: bash
@@ -23,5 +19,5 @@ runs:
       uses: actions/upload-artifact@v3
       with:
         name: app-artifact
-        path: ${{ inputs.artifact_path }}
+        path: ${{ env.ARTIFACT_PATH }}
         retention-days: 1
