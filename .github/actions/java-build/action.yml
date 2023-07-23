@@ -5,7 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Maven
-      uses: RocketBus/actions/.github/actions/maven-setup@v1
+      uses: RocketBus/actions/.github/actions/java-setup@v1
 
     - name: Lint
       shell: bash
