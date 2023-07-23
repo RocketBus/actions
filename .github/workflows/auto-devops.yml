@@ -18,6 +18,14 @@ on:
         type: string
         required: false
         default: 17
+      docker_enabled:
+        type: string
+        required: false
+        default: true
+      helm_senabled:
+        type: string
+        required: false
+        default: true
     secrets:
       aws_access_key_id:
         required: true
@@ -35,6 +43,8 @@ env:
   JDK_VERSION: ${{ inputs.jdk_version }}
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
+  DOCKER_ENABLED: ${{ inputs.docker_enabled }}
+  HELM_ENABLED: ${{ inputs.helm_enabled }}
 
 jobs:
   build:
@@ -63,7 +73,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v0
 
       - name: Build
-        run: RocketBus/actions/.github/actions/composite/build@v1
+        run: RocketBus/actions/.github/actions/composite-build@v1
 
   test:
     name: Test
@@ -75,7 +85,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test
-        run: RocketBus/actions/.github/actions/composite/test@v1
+        run: RocketBus/actions/.github/actions/composite-test@v1
         env:
           SONAR_TOKEN: ${{ secrets.sonar_token }}
 
@@ -98,4 +108,4 @@ jobs:
   #       uses: actions/checkout@v3
 
   #     - name: Release
-  #       run: RocketBus/actions/.github/actions/composite/release@v1
+  #       run: RocketBus/actions/.github/actions/composite-release@v1

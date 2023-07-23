@@ -5,7 +5,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Node.js
-      uses: RocketBus/actions/.github/actions/nodejs/setup@v1
+      uses: RocketBus/actions/.github/actions/nodejs-setup@v1
 
     - name: Lint Code
       if: ${{ env.NODE_PACKAGE_MANAGEMENT == 'npm' }}

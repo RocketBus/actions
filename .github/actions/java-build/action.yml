@@ -1,19 +1,19 @@
-name: 'Gradle Build'
+name: 'Maven Build'
 description: ''
 
 runs:
   using: "composite"
   steps:
-    - name: Set up Gradle
-      uses: RocketBus/actions/.github/actions/gradle/setup@v1
+    - name: Set up Maven
+      uses: RocketBus/actions/.github/actions/maven-setup@v1
 
     - name: Lint
       shell: bash
-      run: ./gradlew spotlessCheck
+      run: ./mvnw $MAVEN_CLI_OPTS spotless:check
 
     - name: Build Artifact
       shell: bash
-      run: ./gradlew build -x spotlessCheck -x test
+      run: ./mvnw $MAVEN_CLI_OPTS package -Dspotless.check.skip=true -Dmaven.test.skip=true
 
     - name: Archive Application Artifact
       uses: actions/upload-artifact@v3

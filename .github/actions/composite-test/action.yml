@@ -22,18 +22,18 @@ runs:
 
     - name: Test
       if: ${{ env.BUILDPACK == 'nodejs' }}
-      uses: RocketBus/actions/.github/actions/nodejs/test@v1
+      uses: RocketBus/actions/.github/actions/nodejs-test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}
 
     - name: Test
       if: ${{ env.BUILDPACK == 'java' }}
-      uses: RocketBus/actions/.github/actions/java/test@v1
+      uses: RocketBus/actions/.github/actions/java-test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}
 
     - name: Test
       if: ${{ env.BUILDPACK == 'gradle' }}
-      uses: RocketBus/actions/.github/actions/gradle/test@v1
+      uses: RocketBus/actions/.github/actions/gradle-test@v1
       with:
         sonar_args: ${{ steps.sonar_parameters.outputs.args }}

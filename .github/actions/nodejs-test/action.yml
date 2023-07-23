@@ -10,7 +10,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Node.js
-      uses: RocketBus/actions/.github/actions/nodejs/setup@v1
+      uses: RocketBus/actions/.github/actions/nodejs-setup@v1
 
     - name: Run Tests
       if: ${{ inputs.package_management == 'npm' }}
