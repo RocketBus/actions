@@ -73,7 +73,7 @@ jobs:
         uses: gittools/actions/gitversion/execute@v0
 
       - name: Build
-        run: RocketBus/actions/.github/actions/composite-build@v1
+        uses: RocketBus/actions/.github/actions/composite-build@v1
 
   test:
     name: Test
@@ -85,7 +85,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test
-        run: RocketBus/actions/.github/actions/composite-test@v1
+        uses: RocketBus/actions/.github/actions/composite-test@v1
         env:
           SONAR_TOKEN: ${{ secrets.sonar_token }}
 
@@ -108,4 +108,4 @@ jobs:
   #       uses: actions/checkout@v3
 
   #     - name: Release
-  #       run: RocketBus/actions/.github/actions/composite-release@v1
+  #       uses: RocketBus/actions/.github/actions/composite-release@v1
