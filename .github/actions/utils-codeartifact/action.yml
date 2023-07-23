@@ -15,9 +15,9 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-access-key-id: ${{ inputs.aws_access_key_id }}
-        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
-        aws-region: ${{ vars.CODEARTIFACT_REGION }}
+        aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.CODEARTIFACT_REGION }}
 
     - name: Set CodeArtifact Token
       shell: bash
@@ -26,5 +26,5 @@ runs:
         echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
         echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
       env:
-        CODEARTIFACT_DOMAIN: ${{ vars.CODEARTIFACT_DOMAIN }}
-        CODEARTIFACT_DOMAIN_OWNER: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+        CODEARTIFACT_DOMAIN: ${{ env.CODEARTIFACT_DOMAIN }}
+        CODEARTIFACT_DOMAIN_OWNER: ${{ env.CODEARTIFACT_DOMAIN_OWNER }}
