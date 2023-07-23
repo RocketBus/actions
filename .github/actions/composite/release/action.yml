@@ -1,0 +1,27 @@
+name: 'Release'
+description: 'Release Artifact'
+
+inputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Release
+      if: ${{ inputs.buildpack == 'nodejs' }}
+      uses: RocketBus/actions/.github/actions/nodejs/release@v2
+
+    - name: Release
+      if: ${{ inputs.buildpack == 'java' }}
+      uses: RocketBus/actions/.github/actions/java/release@v2
+
+    - name: Release
+      if: ${{ inputs.buildpack == 'gradle' }}
+      uses: RocketBus/actions/.github/actions/gradle/release@v2
+
+    - name: Release Docker
+      if: ${{ inputs.docker_enabled }}
+      uses: RocketBus/actions/.github/actions/docker/release@v2
+
+    - name: Release Helm
+      if: ${{ inputs.helm_enabled }}
+      uses: RocketBus/actions/.github/actions/helm/release@v2

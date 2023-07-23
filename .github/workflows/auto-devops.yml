@@ -1,0 +1,68 @@
+name: AutoDevOps CI
+
+on:
+  workflow_call:
+    inputs:
+    secrets:
+
+jobs:
+  build:
+    name: Build
+    runs-on: actions-runner-set
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET cli
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+        env:
+          DOTNET_INSTALL_DIR: ~/.local/share/dotnet
+
+      - name: Set up GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Determine Version
+        id: gitversion
+        uses: gittools/actions/gitversion/execute@v0
+
+      - name: Build
+        run: RocketBus/actions/.github/actions/composite/build@v2
+
+  test:
+    name: Test
+    runs-on: actions-runner-set
+    needs:
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Test
+        run: RocketBus/actions/.github/actions/composite/test@v2
+
+      - name: SonarQube Quality Gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.sonar_token }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+ 
+  release:
+    name: Release
+    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    runs-on: actions-runner-set
+    needs:
+      - build
+      - test
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Release
+        run: RocketBus/actions/.github/actions/composite/release@v2

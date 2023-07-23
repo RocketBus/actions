@@ -1,0 +1,23 @@
+name: 'Gradle Test'
+description: ''
+
+inputs:
+  sonar_args:
+    description: ''
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Gradle
+      uses: RocketBus/actions/.github/actions/gradle/setup@v2
+      with:
+        java-version: ${{ inputs.jdk_version }}
+
+    - name: Run Tests
+      shell: bash
+      run: ./gradlew test jacocoTestReport
+
+    - name: SonarQube Scan
+      shell: bash
+      run: ./gradlew sonar ${{ inputs.sonar_args }}

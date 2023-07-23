@@ -1,0 +1,22 @@
+name: 'Gradle Setup'
+description: ''
+
+inputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ inputs.jdk_version }}
+        distribution: 'corretto'
+        cache: 'maven'
+        overwrite-settings: false
+
+    - name: Set up CodeArtifact Authorization Token
+      shell: bash
+      run: RocketBus/workflows-templates/.github/actions/utils/codeartifact@v2
+      with:
+        aws_access_key_id: ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}

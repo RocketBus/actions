@@ -1,0 +1,41 @@
+name: 'Node.js Build'
+description: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js
+      uses: RocketBus/actions/.github/actions/nodejs/setup@v2
+
+    - name: Lint Code
+      if: ${{ inputs.package_management == 'npm' }}
+      shell: bash
+      run: npm run lint
+
+    - name: Lint Code
+      if: ${{ inputs.package_management == 'yarn' }}
+      shell: bash
+      run: yarn run lint
+
+    - name: Check Build Script on package.json
+      id: check_scripts
+      shell: bash
+      run: echo build=$(jq -e '.scripts | has("build")' package.json) >> $GITHUB_OUTPUT
+
+    - name: Build Artifact
+      if: ${{ inputs.package_management == 'npm' && steps.check_scripts.outputs.build }}
+      shell: bash
+      run: npm run build
+
+    - name: Build Artifact
+      if: ${{ inputs.package_management == 'yarn' && steps.check_scripts.outputs.build }}
+      shell: bash
+      run: yarn run build
+
+    - name: Archive Application Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: ${{ env.ARTIFACT_PATH }}
+        if-no-files-found: ignore
+        retention-days: 1

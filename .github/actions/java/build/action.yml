@@ -1,0 +1,27 @@
+name: 'Maven Build'
+description: ''
+
+inputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Maven
+      uses: RocketBus/actions/.github/actions/maven/setup@v2
+      with:
+        java-version: ${{ inputs.jdk_version }}
+
+    - name: Lint
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS spotless:check
+
+    - name: Build Artifact
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS package -Dspotless.check.skip=true -Dmaven.test.skip=true
+
+    - name: Archive Application Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: ${{ inputs.artifact_path }}
+        retention-days: 1

@@ -1,0 +1,27 @@
+name: 'Gradle Build'
+description: ''
+
+inputs: {}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Gradle
+      uses: RocketBus/actions/.github/actions/gradle/setup@v2
+      with:
+        java-version: ${{ inputs.jdk_version }}
+
+    - name: Lint
+      shell: bash
+      run: ./gradlew spotlessCheck
+
+    - name: Build Artifact
+      shell: bash
+      run: ./gradlew build -x spotlessCheck -x test
+
+    - name: Archive Application Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: ${{ inputs.artifact_path }}
+        retention-days: 1

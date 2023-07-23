@@ -1,0 +1,27 @@
+name: 'Maven Test'
+description: ''
+
+inputs:
+  sonar_args:
+    description: ''
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Maven
+      uses: RocketBus/actions/.github/actions/maven/setup@v2
+      with:
+        java-version: ${{ inputs.jdk_version }}
+
+    - name: Run Unit Tests
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipITs=true -Dsonar.skip=true
+
+    - name: Run Integration Tests
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipUTs=true -Dsonar.skip=true
+
+    - name: SonarQube Scan
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS sonar:sonar ${{ inputs.sonar_args }}

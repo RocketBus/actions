@@ -1,0 +1,64 @@
+name: 'Node.js Setup'
+description: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js (npm)
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+
+    - name: Install Yarn
+      if: ${{ inputs.package_management == 'yarn' }}
+      shell: bash
+      run: npm install --global yarn
+
+    - name: Set up Node.js (yarn)
+      if: ${{ inputs.package_management == 'yarn' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: yarn
+
+    - name: Create .npmrc
+      if: ${{ inputs.package_management == 'npm' }}
+      shell: bash
+      run: echo $NPMRC > ~/.npmrc
+      env:
+        NPMRC: ${{ vars.NPMRC }}
+
+    - name: Create .yarnrc.yml
+      if: ${{ inputs.package_management == 'yarn' }}
+      shell: bash
+      run: echo $YARNRC > ~/.yarnrc.yml
+      env:
+        YARNRC: ${{ vars.YARNRC }}
+
+    - name: Set up CodeArtifact Authorization Token
+      shell: bash
+      run: RocketBus/actions/.github/actions/utils/codeartifact@v2
+      with:
+        aws_access_key_id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws_secret_access_key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Install Dependencies
+      if: ${{ inputs.package_management == 'npm' }}
+      shell: bash
+      run: npm ci
+
+    - name: Install Dependencies
+      if: ${{ inputs.package_management == 'yarn' }}
+      shell: bash
+      run: yarn install --frozen-lockfile
+
+    - name: Set New Version
+      if: ${{ inputs.package_management == 'npm' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: npm version $GITVERSION_SEMVER --no-git-tag-version --allow-same-version
+
+    - name: Set New Version
+      if: ${{ inputs.package_management == 'yarn' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: yarn version --new-version $GITVERSION_SEMVER --no-git-tag-version
