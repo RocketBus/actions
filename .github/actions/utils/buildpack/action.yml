@@ -1,0 +1,50 @@
+name: 'Set up Buildpack'
+description: 'Set up Buildpack'
+
+inputs:
+  buildpacks:
+    description: ''
+    required: false
+
+outputs:
+  buildpacks:
+    description: ''
+    value: ${{ steps.setup_buildpack.outputs.buildpacks }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Buildpack
+      id: setup_buildpack
+      shell: bash
+      env:
+        AUTODETECT_BUILDPACK: ${{ inputs.buildpacks && 'false' || 'true' }}
+        BUILDPACKS: ${{ inputs.buildpacks }}
+      run: |
+        if [[ $AUTODETECT_BUILDPACK == 'true' ]]; then
+          DETECTED_BUILDPACKS='[]'
+
+          if [[ -f package.json ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -c '. + ["nodejs"]')
+          fi
+
+          if [[ -f pom.xml || -f pom.groovy || -f pom.yml || pom.yaml ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -c '. + ["java"]')
+          fi
+
+          if [[ -f gradlew || -f build.gradle || -f settings.gradle || -f build.gradle.kts || -f settings.gradle.kts ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -c '. + ["gradle"]')
+          fi
+
+          if [[ -f Dockerfile ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -c '. + ["docker"]')
+          fi
+
+          if [[ -f $CHART_PATH/$CHART_NAME/Chart.yaml ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -c '. + ["helm"]')
+          fi
+        else
+          BUILDPACKS=$(echo $BUILDPACKS jq -c -R -e 'split(" ") | .')
+        fi
+
+        echo buildpacks=${BUILDPACKS:-DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT

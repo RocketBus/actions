@@ -1,0 +1,50 @@
+name: 'Maven Build'
+description: ''
+
+inputs:
+  aws_access_key_id:
+    description: ''
+    required: false
+  aws_secret_access_key:
+    description: ''
+    required: false
+  codeartifact_domain_owner:
+    description: ''
+    required: false
+  codeartifact_domain:
+    description: ''
+    required: false
+  maven_settings:
+    description: ''
+    required: false
+  artifact_path:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Maven
+      uses: RocketBus/actions/.github/actions/java/setup@v1
+      with:
+        aws_access_key_id: ${{ inputs.aws_access_key_id }}
+        aws_secret_access_key: ${{ inputs.aws_secret_access_key }}
+        codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
+        codeartifact_domain: ${{ inputs.codeartifact_domain }}
+        maven_settings: ${{ inputs.maven_settings }}
+
+    - name: Lint
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS spotless:check
+
+    - name: Build Artifact
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS package -Dspotless.check.skip=true -Dmaven.test.skip=true
+
+    - name: Archive Application Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-artifact
+        path: ${{ inputs.artifact_path }}
+        if-no-files-found: ignore
+        retention-days: 1
