@@ -45,6 +45,7 @@ runs:
 
     - name: Get Package Info
       id: package_info
+      shell: bash
       run: |
         PACKAGE=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId q -DforceStdout)
         VERSION=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version q -DforceStdout)

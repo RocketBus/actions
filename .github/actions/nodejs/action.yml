@@ -77,6 +77,7 @@ runs:
 
     - name: Get Package Info
       id: package_info
+      shell: bash
       run: |
         PACKAGE=$(jq ".package" package.json)
         VERSION=$(jq ".version" package.json)
