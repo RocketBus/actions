@@ -38,5 +38,5 @@ runs:
         else
           BUILDPACKS=$(echo $BUILDPACKS jq -c -r -e 'split(" ") | .')
         fi
-
+        echo buildpacks=${BUILDPACKS:-DETECTED_BUILDPACKS}
         echo buildpacks=${BUILDPACKS:-DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT
