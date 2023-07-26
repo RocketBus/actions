@@ -23,7 +23,9 @@ runs:
     - name: Create settings.xml
       if: ${{ inputs.maven_settings }}
       shell: bash
-      run: echo ${{ inputs.maven_settings }} > ~/.m2/settings.xml
+      env:
+        MAVEN_SETTINGS: ${{ inputs.maven_settings }}
+      run: echo $MAVEN_SETTINGS > ~/.m2/settings.xml
 
     - name: Set up CodeArtifact Authorization Token
       uses: RocketBus/actions/.github/actions/utils/codeartifact@v1

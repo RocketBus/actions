@@ -36,12 +36,16 @@ runs:
     - name: Create .npmrc
       if: ${{ env.NODE_PACKAGE_MANAGER == 'npm' && inputs.npmrc }}
       shell: bash
-      run: echo ${{ inputs.npmrc }} > ~/.npmrc
+      env:
+        NPMRC: ${{ inputs.npmrc }}
+      run: echo $NPMRC > ~/.npmrc
 
     - name: Create .yarnrc.yml
       if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' && inputs.yarnrc }}
       shell: bash
-      run: echo ${{ inputs.yarnrc }} > ~/.yarnrc.yml
+      env:
+        YARNRC: ${{ inputs.yarnrc }}
+      run: echo $YARNRC > ~/.yarnrc.yml
 
     - name: Set up CodeArtifact Authorization Token
       uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
