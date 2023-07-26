@@ -17,11 +17,11 @@ runs:
   steps:
     - name: Set up Buildpack
       id: buildpack
-      uses: RocketBus/actions/.github/actions/utils/buildpack@v1
+      uses: .github/actions/utils/buildpack
 
     - name: Test Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
-      uses: RocketBus/actions/.github/actions/nodejs@v1
+      uses: .github/actions/nodejs
       with:
         stage: 'test'
         yarnrc: ${{ inputs.yarnrc }}
@@ -29,13 +29,13 @@ runs:
 
     - name: Test Java
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
-      uses: RocketBus/actions/.github/actions/java@v1
+      uses: .github/actions/java
       with:
         stage: 'test'
         maven_settings: ${{ inputs.maven_settings }}
 
     - name: Test Gradle
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
-      uses: RocketBus/actions/.github/actions/gradle@v1
+      uses: .github/actions/gradle
       with:
         stage: 'test'
