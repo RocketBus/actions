@@ -53,8 +53,8 @@ runs:
       id: package_info
       shell: bash
       run: |
-        PACKAGE=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId q -DforceStdout)
-        VERSION=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version q -DforceStdout)
+        PACKAGE=$(./mvnw -B -Dstyle.color=always -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+        VERSION=$(./mvnw -B -Dstyle.color=always -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version -q -DforceStdout)
 
         echo artifact_name=${PACKAGE}-${VERSION} >> $GITHUB_OUTPUT
 
