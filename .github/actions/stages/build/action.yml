@@ -21,7 +21,7 @@ runs:
 
     - name: Build Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
-      uses: RocketBus/actions/.github/actions/nodejs
+      uses: RocketBus/actions/.github/actions/nodejs@v1
       with:
         stage: 'build'
         yarnrc: ${{ inputs.yarnrc }}
