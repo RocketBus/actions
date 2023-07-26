@@ -1,28 +1,14 @@
 name: 'CodeArtifact Authorization Token'
 description: 'Set up CodeArtifact Authorization Token'
 
-inputs:
-  codeartifact_domain_owner:
-    description: ''
-    required: true
-  codeartifact_domain:
-    description: ''
-    required: true
-  aws_access_key_id:
-    description: AWS Access Key ID
-    required: true
-  aws_secret_access_key:
-    description:  AWS Secret Access Key
-    required: true
-
 runs:
   using: "composite"
   steps:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-access-key-id: ${{ inputs.aws_access_key_id }}
-        aws-secret-access-key: ${{ inputs.aws_secret_access_key }}
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.CODEARTIFACT_REGION }}
 
     - name: Set CodeArtifact Token
@@ -31,6 +17,3 @@ runs:
         CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
         echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
         echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
-      env:
-        CODEARTIFACT_DOMAIN_OWNER: ${{ inputs.codeartifact_domain_owner }}
-        CODEARTIFACT_DOMAIN: ${{ inputs.codeartifact_domain }}

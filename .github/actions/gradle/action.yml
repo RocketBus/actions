@@ -1,0 +1,66 @@
+name: 'Gradle CI'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ env.JDK_VERSION }}
+        distribution: 'corretto'
+        cache: 'gradle'
+        overwrite-settings: false
+
+    - name: Set up CodeArtifact Authorization Token
+      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+
+    - name: Lint
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: ./gradlew spotlessCheck
+
+    - name: Build Artifact
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: ./gradlew build -x spotlessCheck -x test
+
+    - name: Run Tests
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: ./gradlew test jacocoTestReport
+
+    - name: Set up JDK for SonarQube
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: 11
+        distribution: 'corretto'
+        cache: 'gradle'
+        overwrite-settings: false
+
+    - name: SonarQube Scan
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: |
+        if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+          SONAR_ARGS="-Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+            -Dsonar.pullrequest.branch=${{ github.head_ref }} \
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
+        elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_name }} != ${{ github.event.repository.default_branch }} ]]; then
+          SONAR_ARGS="-Dsonar.branch.name=${{ github.ref_name }}"
+        fi
+
+        ./gradlew sonar $SONAR_ARGS
+
+    - name: SonarQube Quality Gate
+      uses: sonarsource/sonarqube-quality-gate-action@master

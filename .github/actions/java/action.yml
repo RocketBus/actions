@@ -1,0 +1,118 @@
+name: 'Java CI'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK
+      uses: actions/setup-java@v3
+      with:
+        java-version: ${{ env.JDK_VERSION }}
+        distribution: 'corretto'
+        cache: 'maven'
+        overwrite-settings: false
+
+    - name: Create settings.xml
+      shell: bash
+      run: echo $MAVEN_SETTINGS > ~/.m2/settings.xml
+
+    - name: Set up CodeArtifact Authorization Token
+      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
+
+    - name: Release Prepare
+      if: ${{ github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        ./mvnw org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$GITVERSION_SEMVER
+        ./mvnw org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$GITVERSION_SEMVER
+        ./mvnw org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
+        git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
+
+    - name: Lint
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS spotless:check
+
+    - name: Build Artifact
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS package -Dspotless.check.skip=true -Dmaven.test.skip=true
+
+    - name: Get Package Info
+      id: package_info
+      run: |
+        PACKAGE=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId q -DforceStdout)
+        VERSION=$(./mvnw org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version q -DforceStdout)
+
+        echo artifact_name=${PACKAGE}-${VERSION} >> $GITHUB_OUTPUT
+
+    - name: Archive Application Artifact
+      if: ${{ inputs.stage == 'build' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+        path: ${{ env.ARTIFACT_PATH || '**/target/*.jar' }}
+        if-no-files-found: ignore
+        retention-days: 1
+
+    - name: Run Unit Tests
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipITs=true -Dsonar.skip=true
+
+    - name: Run Integration Tests
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipUTs=true -Dsonar.skip=true
+
+    - name: Set up JDK for SonarQube
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/setup-java@v3
+      with:
+        java-version: 11
+        distribution: 'corretto'
+        cache: 'maven'
+        overwrite-settings: false
+
+    - name: SonarQube Scan
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: |
+        if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+          SONAR_ARGS="-Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+            -Dsonar.pullrequest.branch=${{ github.head_ref }} \
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
+        elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_name }} != ${{ github.event.repository.default_branch }} ]]; then
+          SONAR_ARGS="-Dsonar.branch.name=${{ github.ref_name }}"
+        fi
+
+        ./mvnw $MAVEN_CLI_OPTS sonar:sonar $SONAR_ARGS
+
+    - name: SonarQube Quality Gate
+      uses: sonarsource/sonarqube-quality-gate-action@master
+
+    - name: Download Application Artifact
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+
+    - name: Release Artifact
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true
+
+    - name: Bump Version
+      if: ${{ inputs.stage == 'post_release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        ./mvnw build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT
+        ./mvnw build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-SNAPSHOT
+        ./mvnw org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
+        git commit -a -m "chore: bump version [skip ci]" || echo "nothing to commit, proceed"

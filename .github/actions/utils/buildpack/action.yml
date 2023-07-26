@@ -1,11 +1,6 @@
 name: 'Set up Buildpack'
 description: 'Set up Buildpack'
 
-inputs:
-  buildpacks:
-    description: ''
-    required: false
-
 outputs:
   buildpacks:
     description: ''
@@ -17,11 +12,8 @@ runs:
     - name: Set up Buildpack
       id: setup_buildpack
       shell: bash
-      env:
-        AUTODETECT_BUILDPACK: ${{ inputs.buildpacks && 'false' || 'true' }}
-        BUILDPACKS: ${{ inputs.buildpacks }}
       run: |
-        if [[ $AUTODETECT_BUILDPACK == 'true' ]]; then
+        if [[ $AUTODETECT_BUILDPACKS == 'true' ]]; then
           DETECTED_BUILDPACKS='[]'
 
           if [[ -f package.json ]]; then

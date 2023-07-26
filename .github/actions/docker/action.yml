@@ -1,0 +1,102 @@
+name: 'Docker Build'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Docker Context for Buildx
+      shell: bash
+      id: buildx-context
+      run: docker context create builders
+
+    - name: Set up Docker Buildx
+      id: buildx
+      uses: docker/setup-buildx-action@v2
+      with:
+        endpoint: builders
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.ECR_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login_ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Docker Metadata
+      id: docker_metadata
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ steps.login_ecr.outputs.registry }}/${{ env.DOCKER_IMAGE_NAME }}
+        tags: |
+          type=ref,event=pr,prefix=${{ env.GITVERSION_MAJORMINORPATCH }}-,suffix=.{{ env.GITVERSION_PRERELEASENUMBER }}
+          type=raw,priority=300,value=${{ env.GITVERSION_SEMVER }},suffix=${{ env.VERSION_SUFFIX }},enable={{is_default_branch}}
+          type=raw,value=${{ env.GITVERSION_SEMVER }}
+
+    - name: Lint
+      if: ${{ inputs.stage == 'build' }}
+      uses: hadolint/hadolint-action@v3.1.0
+      with:
+        dockerfile: ${{ env.DOCKERFILE_PATH }}
+
+    - name: Build Image
+      if: ${{ inputs.stage == 'build' }}
+      uses: docker/build-push-action@v3
+      with:
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        context: ${{ env.DOCKER_BUILD_CONTEXT }}
+        file: ${{ env.DOCKERFILE_PATH }}
+        target: ${{ env.DOCKER_BUILD_TARGET }}
+        build-args: ${{ env.DOCKER_BUILD_ARGS }}
+        labels: ${{ steps.docker_metadata.outputs.labels }}
+        tags: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+        load: true
+
+    - name: Scan Image
+      if: ${{ inputs.stage == 'build' }}
+      uses: anchore/scan-action@v3
+      with:
+        image: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+        fail-build: ${{ env.DOCKER_SCAN_FAIL_BUILD }}
+        severity-cutoff: ${{ env.DOCKER_SCAN_SEVERITY_CUTOFF }}
+        output-format: table
+        only-fixed: true
+
+    - name: Save Image
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      env:
+        DOCKER_IMAGE_TAG: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+      run: docker save -o container-image.tar $DOCKER_IMAGE_TAG
+
+    - name: Archive Image Artifact
+      if: ${{ inputs.stage == 'build' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: container-image-${{ steps.docker_metadata.outputs.version }}
+        path: container-image.tar
+        retention-days: 1
+
+    - name: Download Image Artifact
+      if: ${{ inputs.stage == 'release' }}
+      uses: actions/download-artifact@v3
+      with:
+        name: container-image-${{ steps.docker_metadata.outputs.version }}
+
+    - name: Release Image
+      if: ${{ inputs.stage == 'release' }}
+      shell: bash
+      env:
+        DOCKER_IMAGE_TAG: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+      run: |
+        docker load -i container-image.tar
+        docker push $DOCKER_IMAGE_TAG

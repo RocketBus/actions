@@ -1,0 +1,149 @@
+name: 'Node.js CI'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Node.js (npm)
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: npm
+
+    - name: Install Yarn
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' }}
+      shell: bash
+      run: npm install --global yarn
+
+    - name: Set up Node.js (yarn)
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: yarn
+
+    - name: Create .npmrc
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'npm' }}
+      shell: bash
+      run: echo $NPMRC > ~/.npmrc
+
+    - name: Create .yarnrc.yml
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' }}
+      shell: bash
+      run: echo $YARNRC > ~/.yarnrc.yml
+
+    - name: Set up CodeArtifact Authorization Token
+      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile; fi
+
+    - name: Release Prepare
+      if: ${{ github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then
+          npm version $GITVERSION_SEMVER --no-git-tag-version --allow-same-version
+        fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then
+          yarn version --new-version $GITVERSION_SEMVER --no-git-tag-version
+        fi
+
+        git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
+
+    - name: Lint Code
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: $NODE_PACKAGE_MANAGER run lint
+
+    - name: Check Build Script on package.json
+      id: check_scripts
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: echo build=$(jq ".scripts | has(\"build${NODE_BUILD_ENV:+:$NODE_BUILD_ENV}\")" package.json) >> $GITHUB_OUTPUT
+
+    - name: Build Artifact
+      if: ${{ inputs.stage == 'build' && steps.check_scripts.outputs.build }}
+      shell: bash
+      run: $NODE_PACKAGE_MANAGER run build${NODE_BUILD_ENV:+:$NODE_BUILD_ENV}
+
+    - name: Get Package Info
+      id: package_info
+      run: |
+        PACKAGE=$(jq ".package" package.json)
+        VERSION=$(jq ".version" package.json)
+        VERSION_SUFFIX=${NODE_BUILD_ENV:+$NODE_BUILD_ENV}
+
+        echo VERSION_SUFFIX=$VERSION_SUFFIX >> $GITHUB_ENV
+        echo artifact_name=${PACKAGE}-${VERSION}${VERSION_SUFFIX} >> $GITHUB_OUTPUT
+
+    - name: Archive Application Artifact
+      if: ${{ inputs.stage == 'build' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+        path: ${{ env.ARTIFACT_PATH || 'build/' }}
+        if-no-files-found: ignore
+        retention-days: 1
+
+    - name: Run Tests
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: $NODE_PACKAGE_MANAGER run test
+
+    - name: Set up SonarQube Args
+      id: setup_sonar_args
+      if: ${{ inputs.stage == 'test' }}
+      shell: bash
+      run: |
+        if [[ ${{ github.event_name }} == 'pull_request' ]]; then
+          SONAR_ARGS="-Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
+            -Dsonar.pullrequest.branch=${{ github.head_ref }} \
+            -Dsonar.pullrequest.base=${{ github.base_ref }}
+            -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
+        elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_name }} != ${{ github.event.repository.default_branch }} ]]; then
+          SONAR_ARGS="-Dsonar.branch.name=${{ github.ref_name }}"
+        fi
+
+        echo "args=$SONAR_ARGS" >> $GITHUB_OUTPUT
+
+    - name: SonarQube Scan
+      if: ${{ inputs.stage == 'test' }}
+      uses: sonarsource/sonarqube-scan-action@master
+      with:
+        args: ${{ steps.setup_sonar_args.outputs.args }}
+
+    - name: SonarQube Quality Gate
+      uses: sonarsource/sonarqube-quality-gate-action@master
+
+    - name: Download Application Artifact
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+
+    - name: Release Artifact
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: $NODE_PACKAGE_MANAGER publish --tag ${GITVERSION_SEMVER}-${NODE_BUILD_ENV:+NODE_BUILD_ENV}
+
+    - name: Bump Version
+      if: ${{ inputs.stage == 'post_release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then
+          npm version patch --no-git-tag-version
+        fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then
+          yarn version --patch --no-git-tag-version
+        fi
+
+        git commit -a -m "chore: bump version [skip ci]" || echo "nothing to commit, proceed"
