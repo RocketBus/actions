@@ -73,6 +73,10 @@ runs:
         if-no-files-found: ignore
         retention-days: 1
 
+    - name: List target
+      shell: bash
+      run: ls -l target/
+
     - name: Run Unit Tests
       if: ${{ inputs.stage == 'test' }}
       shell: bash
