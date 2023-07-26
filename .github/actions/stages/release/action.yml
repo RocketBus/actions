@@ -22,8 +22,8 @@ runs:
     - name: Set up GIT
       shell: bash
       run: |
-        git config user.email "github-actions@clickbus.com"
-        git config user.name "Github Actions"
+        git config --global user.email "github-actions@clickbus.com"
+        git config --global user.name "Github Actions"
 
     - name: Release Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}

@@ -40,6 +40,10 @@ runs:
       with:
         stage: 'build'
 
+    - name: teste
+      shell: bash
+      run: ls -l
+
     - name: Build Docker
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
       uses: RocketBus/actions/.github/actions/docker@v1
