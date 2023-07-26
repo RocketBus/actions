@@ -18,7 +18,7 @@ runs:
         overwrite-settings: false
 
     - name: Set up CodeArtifact Authorization Token
-      uses: ./.github/actions/utils/codeartifact
+      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
 
     - name: Lint
       if: ${{ inputs.stage == 'build' }}

@@ -17,11 +17,11 @@ runs:
   steps:
     - name: Set up Buildpack
       id: buildpack
-      uses: ./.github/actions/utils/buildpack
+      uses: RocketBus/actions/.github/actions/utils/buildpack@v1
 
     - name: Release Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
-      uses: ./.github/actions/nodejs
+      uses: RocketBus/actions/.github/actions/nodejs@v1
       with:
         stage: 'release'
         yarnrc: ${{ inputs.yarnrc }}
@@ -29,26 +29,26 @@ runs:
 
     - name: Release Java
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
-      uses: ./.github/actions/java
+      uses: RocketBus/actions/.github/actions/java@v1
       with:
         stage: 'release'
         maven_settings: ${{ inputs.maven_settings }}
 
     - name: Release Gradle
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
-      uses: ./.github/actions/gradle
+      uses: RocketBus/actions/.github/actions/gradle@v1
       with:
         stage: 'release'
 
     - name: Release Docker
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
-      uses: ./.github/actions/docker
+      uses: RocketBus/actions/.github/actions/docker@v1
       with:
         stage: 'release'
 
     - name: Release Helm
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
-      uses: ./.github/actions/helm
+      uses: RocketBus/actions/.github/actions/helm@v1
       with:
         stage: 'release'
 
@@ -69,19 +69,19 @@ runs:
 
     - name: Post Release Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
-      uses: ./.github/actions/nodejs
+      uses: RocketBus/actions/.github/actions/nodejs@v1
       with:
         stage: 'post_release'
 
     - name: Post Release Java
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
-      uses: ./.github/actions/java
+      uses: RocketBus/actions/.github/actions/java@v1
       with:
         stage: 'post_release'
 
     - name: Post Release Gradle
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
-      uses: ./.github/actions/gradle
+      uses: RocketBus/actions/.github/actions/gradle@v1
       with:
         stage: 'post_release'
 
