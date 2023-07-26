@@ -17,11 +17,11 @@ runs:
   steps:
     - name: Set up Buildpack
       id: buildpack
-      uses: .github/actions/utils/buildpack
+      uses: ./.github/actions/utils/buildpack
 
     - name: Build Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
-      uses: .github/actions/nodejs
+      uses: ./.github/actions/nodejs
       with:
         stage: 'build'
         yarnrc: ${{ inputs.yarnrc }}
@@ -29,25 +29,25 @@ runs:
 
     - name: Build Java
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
-      uses: .github/actions/java
+      uses: ./.github/actions/java
       with:
         stage: 'build'
         maven_settings: ${{ inputs.maven_settings }}
 
     - name: Build Gradle
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
-      uses: .github/actions/gradle
+      uses: ./.github/actions/gradle
       with:
         stage: 'build'
 
     - name: Build Docker
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
-      uses: .github/actions/docker
+      uses: ./.github/actions/docker
       with:
         stage: 'build'
 
     - name: Build Helm
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
-      uses: .github/actions/helm
+      uses: ./.github/actions/helm
       with:
         stage: 'build'

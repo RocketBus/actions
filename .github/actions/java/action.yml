@@ -28,7 +28,7 @@ runs:
       run: echo $MAVEN_SETTINGS > ~/.m2/settings.xml
 
     - name: Set up CodeArtifact Authorization Token
-      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
+      uses: ./.github/actions/utils/codeartifact
 
     - name: Set up GIT
       shell: bash

@@ -18,10 +18,7 @@ runs:
         overwrite-settings: false
 
     - name: Set up CodeArtifact Authorization Token
-      uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
-      with:
-        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+      uses: ./.github/actions/utils/codeartifact
 
     - name: Lint
       if: ${{ inputs.stage == 'build' }}
