@@ -56,6 +56,12 @@ runs:
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
         if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile; fi
 
+    - name: Set up GIT
+      shell: bash
+      run: |
+        git config --global user.email "github-actions@clickbus.com"
+        git config --global user.name "Github Actions"
+
     - name: Release Prepare
       if: ${{ github.ref_name == github.event.repository.default_branch }}
       shell: bash

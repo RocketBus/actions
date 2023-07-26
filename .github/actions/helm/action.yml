@@ -30,6 +30,12 @@ runs:
       working-directory: ${{ env.CHART_PATH }}
       run: helm dep up $CHART_NAME
 
+    - name: Set up GIT
+      shell: bash
+      run: |
+        git config --global user.email "github-actions@clickbus.com"
+        git config --global user.name "Github Actions"
+
     - name: Release Prepare
       if: ${{ inputs.stage == 'release' }}
       shell: bash

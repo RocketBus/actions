@@ -19,12 +19,6 @@ runs:
       id: buildpack
       uses: RocketBus/actions/.github/actions/utils/buildpack@v1
 
-    - name: Set up GIT
-      shell: bash
-      run: |
-        git config --global user.email "github-actions@clickbus.com"
-        git config --global user.name "Github Actions"
-
     - name: Release Node.js
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
       uses: RocketBus/actions/.github/actions/nodejs@v1
