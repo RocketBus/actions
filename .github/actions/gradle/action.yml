@@ -60,4 +60,7 @@ runs:
         ./gradlew sonar $SONAR_ARGS
 
     - name: SonarQube Quality Gate
+      if: ${{ inputs.stage == 'test' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
+      with:
+        scanMetadataReportFile: target/sonar/report-task.txt
