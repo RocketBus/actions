@@ -73,12 +73,9 @@ env:
   NODE_OPTIONS: "--max_old_space_size=3072"
   NODE_ENV: production
   NODE_BUILD_ENV: ${{ inputs.node_build_env }}
-  YARNRC: ${{ vars.YARNRC }}
-  NPMRC: ${{ vars.NPMRC }}
   JDK_VERSION: ${{ inputs.jdk_version }}
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
-  MAVEN_SETTINGS: ${{ vars.MAVEN_SETTINGS }}
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
   DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name || github.event.repository.name }}
   DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
@@ -124,6 +121,10 @@ jobs:
 
       - name: Build
         uses: RocketBus/actions/.github/actions/stages/build@v1
+        with:
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
 
   test:
     name: Test
@@ -136,6 +137,10 @@ jobs:
 
       - name: Test
         uses: RocketBus/actions/.github/actions/stages/test@v1
+        with:
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
         env:
           GITVERSION_PRERELEASENUMBER: ${{ needs.build.outputs.gitversion_prereleasenumber }}
           GITVERSION_MAJORMINORPATCH: ${{ needs.build.outputs.gitversion_majorminorpatch }}
@@ -153,6 +158,10 @@ jobs:
 
       - name: Release
         uses: RocketBus/actions/.github/actions/stages/release@v1
+        with:
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
         env:
           GITVERSION_PRERELEASENUMBER: ${{ needs.build.outputs.gitversion_prereleasenumber }}
           GITVERSION_MAJORMINORPATCH: ${{ needs.build.outputs.gitversion_majorminorpatch }}

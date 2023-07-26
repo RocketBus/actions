@@ -1,6 +1,17 @@
 name: 'Test'
 description: 'Test'
 
+inputs:
+  yarnrc:
+    description: ''
+    required: false
+  npmrc:
+    description: ''
+    required: false
+  maven_settings:
+    description: ''
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -13,12 +24,15 @@ runs:
       uses: RocketBus/actions/.github/actions/nodejs@v1
       with:
         stage: 'test'
+        yarnrc: ${{ inputs.yarnrc }}
+        npmrc: ${{ inputs.npmrc }}
 
     - name: Test Java
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
       uses: RocketBus/actions/.github/actions/java@v1
       with:
         stage: 'test'
+        maven_settings: ${{ inputs.maven_settings }}
 
     - name: Test Gradle
       if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}

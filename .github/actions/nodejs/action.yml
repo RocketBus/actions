@@ -5,6 +5,12 @@ inputs:
   stage:
     description: ''
     required: true
+  yarnrc:
+    description: ''
+    required: false
+  npmrc:
+    description: ''
+    required: false
 
 runs:
   using: "composite"
@@ -28,14 +34,14 @@ runs:
         cache: yarn
 
     - name: Create .npmrc
-      if: ${{ env.NODE_PACKAGE_MANAGER == 'npm' }}
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'npm' && inputs.npmrc }}
       shell: bash
-      run: echo $NPMRC > ~/.npmrc
+      run: echo ${{ inputs.npmrc }} > ~/.npmrc
 
     - name: Create .yarnrc.yml
-      if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' }}
+      if: ${{ env.NODE_PACKAGE_MANAGER == 'yarn' && inputs.yarnrc }}
       shell: bash
-      run: echo $YARNRC > ~/.yarnrc.yml
+      run: echo ${{ inputs.yarnrc }} > ~/.yarnrc.yml
 
     - name: Set up CodeArtifact Authorization Token
       uses: RocketBus/actions/.github/actions/utils/codeartifact@v1

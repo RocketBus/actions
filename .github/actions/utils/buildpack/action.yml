@@ -4,7 +4,7 @@ description: 'Set up Buildpack'
 outputs:
   buildpacks:
     description: ''
-    value: ${{ steps.setup_buildpack.outputs.buildpacks }}
+    value: ${{ fromJSON(steps.setup_buildpack.outputs.buildpacks) }}
 
 runs:
   using: "composite"
