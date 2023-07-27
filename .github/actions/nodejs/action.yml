@@ -97,9 +97,7 @@ runs:
       run: |
         PACKAGE=$(jq ".package" package.json)
         VERSION=$(jq ".version" package.json)
-        VERSION_SUFFIX=${NODE_BUILD_ENV:+$NODE_BUILD_ENV}
 
-        echo VERSION_SUFFIX=$VERSION_SUFFIX >> $GITHUB_ENV
         echo artifact_name=${PACKAGE}-${VERSION}${VERSION_SUFFIX} >> $GITHUB_OUTPUT
 
     - name: Archive Application Artifact

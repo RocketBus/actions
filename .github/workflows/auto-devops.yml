@@ -3,6 +3,14 @@ name: Auto DevOps
 on:
   workflow_call:
     inputs:
+      type:
+        type: string
+        required: false
+        default: application
+      build_once:
+        type: string
+        required: false
+        default: true
       autodetect_buildpacks:
         type: string
         required: false
@@ -18,9 +26,6 @@ on:
         type: string
         required: false
         default: yarn
-      node_build_env:
-        type: string
-        required: false
       jdk_version:
         type: string
         required: false
@@ -72,7 +77,6 @@ env:
   NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
   NODE_OPTIONS: "--max_old_space_size=3072"
   NODE_ENV: production
-  NODE_BUILD_ENV: ${{ inputs.node_build_env }}
   JDK_VERSION: ${{ inputs.jdk_version }}
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
@@ -88,6 +92,7 @@ env:
   HELM_VERSION: ${{ vars.HELM_VERSION }}
   CHART_PATH: ${{ inputs.chart_path }}
   CHART_NAME: ${{ inputs.chart_name || github.event.repository.name }}
+  ENV_SPEC: ${{ vars.ENV_SPEC }}
 
 jobs:
   build:
@@ -97,6 +102,10 @@ jobs:
       gitversion_prereleasenumber: ${{ steps.gitversion.outputs.PreReleaseNumber }}
       gitversion_majorminorpatch: ${{ steps.gitversion.outputs.MajorMinorPatch }}
       gitversion_semver: ${{ steps.gitversion.outputs.SemVer }}
+    strategy:
+      fail-fast: true
+      matrix:
+        environment: ${{ inputs.build_once && '[""]' || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && '["github.ref_name"]' || github.ref_name == github.event.repository.default_branch && '["stg", "live"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -125,6 +134,9 @@ jobs:
           yarnrc: ${{ vars.YARNRC }}
           npmrc: ${{ vars.NPMRC }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
+        env:
+          NODE_BUILD_ENV: ${{ matrix.environment }}
+          VERSION_SUFFIX: ${{ matrix.environment }}
 
   test:
     name: Test
@@ -152,6 +164,10 @@ jobs:
     needs:
       - build
       - test
+    strategy:
+      fail-fast: true
+      matrix:
+        environment: ${{ inputs.build_once && '[""]' || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && '["github.ref_name"]' || github.ref_name == github.event.repository.default_branch && '["stg", "live"]') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -166,3 +182,92 @@ jobs:
           GITVERSION_PRERELEASENUMBER: ${{ needs.build.outputs.gitversion_prereleasenumber }}
           GITVERSION_MAJORMINORPATCH: ${{ needs.build.outputs.gitversion_majorminorpatch }}
           GITVERSION_SEMVER: ${{ needs.build.outputs.gitversion_semver }}
+          NODE_BUILD_ENV: ${{ matrix.environment }}
+          VERSION_SUFFIX: ${{ matrix.environment }}
+
+  development:
+    name: Development
+    if: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && inputs.type == 'application' }}
+    environment:
+      name: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && github.ref_name }}
+    runs-on: live
+    needs:
+      - release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
+          ENVIRONMENT: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && github.ref_name }}
+
+  staging:
+    name: Staging
+    if: ${{ github.ref_name == github.event.repository.default_branch && inputs.type == 'application' }}
+    environment:
+      name: staging
+    runs-on: live
+    needs:
+      - release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
+          ENVIRONMENT: stg
+          VERSION_SUFFIX: ${{ inputs.build_once || 'stg' }}
+
+  zaproxy:
+    name: ZAP Scan
+    if: ${{ needs.staging.outputs.url }}
+    runs-on: live
+    needs:
+      - staging
+    steps:
+      - name: ZAP Scan
+        uses: zaproxy/action-full-scan@v0.5.1
+        with:
+          target: ${{ needs.staging.outputs.url }}
+
+  approval:
+    name: Approval
+    if: ${{ always() && (needs.zaproxy.result == 'success' || needs.zaproxy.result == 'skipped') }}
+    runs-on: live
+    needs:
+      - staging
+      - zaproxy
+    steps:
+      - uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ github.token }}
+          approvers: 'caina-araujo-clickbus'
+          minimum-approvals: 1
+          issue-title: "🚀"
+          issue-body: "Por favor aprove ou negue o deploy!"
+          additional-approved-words: '✅, 👍🏼, aprovar, aprovado, sim'
+          additional-denied-words: '❌, 👎🏼, negar, negado, não'
+        timeout-minutes: 120
+
+  live:
+    name: Live
+    environment:
+      name: live
+    runs-on: live
+    needs:
+      - release
+      - approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
+          ENVIRONMENT: live
+          VERSION_SUFFIX: ${{ inputs.build_once || 'live' }}

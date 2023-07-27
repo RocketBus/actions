@@ -6,6 +6,14 @@ inputs:
     description: ''
     required: true
 
+outputs:
+  chart_name:
+    description: ''
+    value: ${{ steps.release.outputs.chart_name }}
+  chart_version:
+    description: ''
+    value: ${{ steps.release.outputs.chart_version }}
+
 runs:
   using: "composite"
   steps:
@@ -74,5 +82,4 @@ runs:
 
         helm push ${CHART_NAME}-${CHART_VERSION}${VERSION_SUFFIX}.tgz oci://${{ steps.login_ecr.outputs.registry }}/helm-charts
 
-        echo chart_name=$CHART_NAME >> $GITHUB_OUTPUT
-        echo chart_version=${CHART_VERSION}${VERSION_SUFFIX} >> $GITHUB_OUTPUT
+        echo chart_version=$CHART_VERSION >> $GITHUB_OUTPUT
