@@ -236,7 +236,7 @@ jobs:
 
   approval:
     name: Approval
-    if: ${{ always() && (needs.zaproxy.result == 'success' || needs.zaproxy.result == 'skipped') }}
+    if: ${{ always() && (needs.zaproxy.result == 'success' || needs.zaproxy.result == 'skipped') && needs.staging.result == 'success' }}
     runs-on: live
     needs:
       - staging
