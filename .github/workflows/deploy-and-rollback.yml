@@ -1,0 +1,260 @@
+name: Deploy & Rollback
+
+on:
+  workflow_call:
+    inputs:
+      action:
+        type: string
+        required: false
+        default: Deployment
+      environment:
+        type: string
+        required: true
+      chart_path:
+        type: string
+        required: false
+        default: charts
+      chart_name:
+        type: string
+        required: false
+      chart_version:
+        type: string
+        required: true
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      slack_app_token:
+        required: true
+      slack_bot_token:
+        required: true
+      slack_signing_secret:
+        required: true
+
+env:
+  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+  ECR_REGION: ${{ vars.ECR_REGION }}
+  HELM_VERSION: ${{ vars.HELM_VERSION }}
+  CHART_PATH: ${{ inputs.chart_path }}
+  CHART_NAME: ${{ inputs.chart_name || github.event.repository.name }}
+  ENV_SPEC: ${{ vars.ENV_SPEC }}
+
+jobs:
+  development:
+    name: Development
+    if: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && inputs.environment == 'development' }}
+    environment:
+      name: ${{ github.ref_name }}
+    runs-on: live
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        if: ${{ inputs.action == 'Deployment' }}
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: ${{ github.ref_name }}
+
+      - name: Rollback
+        if: ${{ inputs.action == 'Rollback' }}
+        uses: RocketBus/actions/.github/actions/stages/rollback@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: ${{ github.ref_name }}
+
+  staging:
+    name: Staging
+    if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging' }}
+    environment:
+      name: staging
+    runs-on: live
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy
+        if: ${{ inputs.action == 'Deployment' }}
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: stg
+
+      - name: Rollback
+        if: ${{ inputs.action == 'Rollback' }}
+        uses: RocketBus/actions/.github/actions/stages/rollback@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: stg
+
+  approval:
+    name: Approval
+    if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'live' }}
+    runs-on: live
+    steps:
+      - name: Send Approval
+        id: send_approval
+        uses: varu3/slack-approval@main
+        continue-on-error: true
+        env:
+          SLACK_APP_TOKEN: ${{ secrets.slack_app_token }}
+          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+          SLACK_SIGNING_SECRET: ${{ secrets.slack_signing_secret }}
+          SLACK_CHANNEL_ID: C05JR25JH63 # acme-approval
+        timeout-minutes: 10
+
+      - name: Approval Status
+        id: approval_status
+        run: echo result=${{ steps.send_approval.outcome }} >> $GITHUB_OUTPUT
+    outputs:
+      status: ${{ steps.approval_status.output.result }}
+
+  live:
+    name: Live
+    if: ${{ needs.approval.output.status == 'success' }}
+    environment:
+      name: live
+    runs-on: live
+    needs:
+      - approval
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Slack Start Notify
+        id: slack
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: CCQ4HC3RN # it-products
+          payload: |
+            {
+              "text": "${{ inputs.action }} started (In Progress)",
+              "attachments": [
+                {
+                  "pretext": "${{ inputs.action }} started [v${{ inputs.chart_version }}]",
+                  "color": "dbab09",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": ${{ github.event.repository.name }},
+                      "short": false
+                    },
+                    {
+                      "title": "Status",
+                      "value": "In Progress",
+                      "short": true
+                    },
+                    {
+                      "title": "Actor",
+                      "value": ${{ env.GITHUB_ACTOR }},
+                      "short": true
+                    },
+                    {
+                      "title": "Action URL",
+                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "short": true
+                    },
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+
+      - name: Deploy
+        id: deploy
+        if: ${{ inputs.action == 'Deployment' }}
+        uses: RocketBus/actions/.github/actions/stages/deploy@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: live
+
+      - name: Rollback
+        id: rollback
+        if: ${{ inputs.action == 'Rollback' }}
+        uses: RocketBus/actions/.github/actions/stages/rollback@v1
+        env:
+          CHART_VERSION: ${{ inputs.chart_version }}
+          ENVIRONMENT: live
+
+      - name: Slack Finish Notify
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: CCQ4HC3RN # it-products
+          update-ts: ${{ steps.slack.outputs.ts }}
+          payload: |
+            {
+              "text": "${{ inputs.action }} finished (Completed)",
+              "attachments": [
+                {
+                  "pretext": "${{ inputs.action }} finished [v${{ inputs.chart_version }}]",
+                  "color": "28a745",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": ${{ github.event.repository.name }},
+                      "short": true
+                    },
+                    {
+                      "title": "Status",
+                      "value": "Completed",
+                      "short": true
+                    },
+                    {
+                      "title": "Actor",
+                      "value": ${{ env.GITHUB_ACTOR }},
+                      "short": true
+                    },
+                    {
+                      "title": "Action URL",
+                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "short": true
+                    },
+                  ]
+                }
+              ]
+            }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+
+      - name: Slack Fail Notify
+        if: ${{ always() && (steps.deploy.outcome == 'failure' || steps.rollback.outcome == 'failure') }}
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: CCQ4HC3RN # it-products
+          update-ts: ${{ steps.slack.outputs.ts }}
+          payload: |
+            {
+              "text": "${{ inputs.action }} failed (Completed)",
+              "attachments": [
+                {
+                  "pretext": "${{ inputs.action }} failed [v${{ inputs.chart_version }}]",
+                  "color": "f01000",
+                  "fields": [
+                    {
+                      "title": "Repository",
+                      "value": ${{ github.event.repository.name }},
+                      "short": true
+                    },
+                    {
+                      "title": "Status",
+                      "value": "Completed",
+                      "short": true
+                    },
+                    {
+                      "title": "Actor",
+                      "value": ${{ env.GITHUB_ACTOR }},
+                      "short": true
+                    },
+                    {
+                      "title": "Action URL",
+                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "short": true
+                    },
+                  ]
+                }
+              ]
+            }

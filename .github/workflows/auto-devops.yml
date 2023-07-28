@@ -10,18 +10,18 @@ on:
       build_once:
         type: string
         required: false
-        default: true
+        default: 'true'
       autodetect_buildpacks:
         type: string
         required: false
-        default: true
+        default: 'true'
       buildpacks:
         type: string
         required: false
       node_version:
         type: string
         required: false
-        default: 18
+        default: '18'
       node_package_manager:
         type: string
         required: false
@@ -29,7 +29,7 @@ on:
       jdk_version:
         type: string
         required: false
-        default: 17
+        default: '17'
       docker_image_name:
         type: string
         required: false
@@ -60,6 +60,12 @@ on:
       aws_secret_access_key:
         required: true
       sonar_token:
+        required: true
+      slack_app_token:
+        required: true
+      slack_bot_token:
+        required: true
+      slack_signing_secret:
         required: true
 
 env:
@@ -233,41 +239,3 @@ jobs:
         uses: zaproxy/action-full-scan@v0.5.1
         with:
           target: ${{ needs.staging.outputs.url }}
-
-  approval:
-    name: Approval
-    if: ${{ always() && needs.staging.result == 'success' && (needs.zaproxy.result == 'success' || needs.zaproxy.result == 'skipped') }}
-    runs-on: live
-    needs:
-      - staging
-      - zaproxy
-    steps:
-      - uses: trstringer/manual-approval@v1
-        with:
-          secret: ${{ github.token }}
-          approvers: 'caina-araujo-clickbus'
-          minimum-approvals: 1
-          issue-title: "🚀"
-          issue-body: "Por favor aprove ou negue o deploy!"
-          additional-approved-words: '✅, 👍🏼, aprovar, aprovado, sim'
-          additional-denied-words: '❌, 👎🏼, negar, negado, não'
-        timeout-minutes: 120
-
-  live:
-    name: Live
-    environment:
-      name: live
-    runs-on: live
-    needs:
-      - release
-      - approval
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Deploy
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
-          ENVIRONMENT: live
-          VERSION_SUFFIX: ${{ inputs.build_once || 'live' }}

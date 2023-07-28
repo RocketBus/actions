@@ -56,19 +56,12 @@ runs:
         ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
         ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
 
-        HELM_ARGS="--cleanup-on-fail --history-max 3"
+        HELM_ARGS="--wait --cleanup-on-fail --history-max 3"
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
           RELEASE_NAMESPACE=$(yq '.releaseNamespace | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
-          VERSION=$(yq '.version | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
         fi
-
-        if [[ -n "$VERSION" ]]; then
-          VERSION=${{ inputs.chart_version }}
-        fi
-        
-        HELM_ARGS="$HELM_ARGS ${VERSION:+--version $VERSION}"
 
         if [[ -d $ENVIRONMENT_SECRETS_DIR ]]; then
           for SECRET_FILE in $(ls $ENVIRONMENT_SECRETS_DIR); do
@@ -94,8 +87,8 @@ runs:
           HELM_ARGS="$HELM_ARGS -f $ENVIRONMENT_VALUES"
         fi
 
-        RELEASE_NAME=${RELEASE_NAME:-$REPOSITORY_NAME}
-        RELEASE_NAMESPACE=${RELEASE_NAMESPACE:-$REPOSITORY_NAME}
+        RELEASE_NAME=${RELEASE_NAME:-$CHART_NAME}
+        RELEASE_NAMESPACE=${RELEASE_NAMESPACE:-$CHART_NAME}
 
         helm upgrade $RELEASE_NAME deploy/$CHART_NAME \
           --install \
