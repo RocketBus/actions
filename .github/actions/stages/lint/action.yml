@@ -1,0 +1,53 @@
+name: 'Lint'
+description: 'Lint Code'
+
+inputs:
+  yarnrc:
+    description: ''
+    required: false
+  npmrc:
+    description: ''
+    required: false
+  maven_settings:
+    description: ''
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Buildpack
+      id: buildpack
+      uses: RocketBus/actions/.github/actions/utils/buildpack@v1
+
+    - name: Lint Node.js
+      if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
+      uses: RocketBus/actions/.github/actions/nodejs@v1
+      with:
+        stage: 'lint'
+        yarnrc: ${{ inputs.yarnrc }}
+        npmrc: ${{ inputs.npmrc }}
+
+    - name: Lint Java
+      if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
+      uses: RocketBus/actions/.github/actions/java@v1
+      with:
+        stage: 'lint'
+        maven_settings: ${{ inputs.maven_settings }}
+
+    - name: Lint Gradle
+      if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
+      uses: RocketBus/actions/.github/actions/gradle@v1
+      with:
+        stage: 'lint'
+
+    - name: Lint Docker
+      if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
+      uses: RocketBus/actions/.github/actions/docker@v1
+      with:
+        stage: 'lint'
+
+    - name: Lint Helm
+      if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
+      uses: RocketBus/actions/.github/actions/helm@v1
+      with:
+        stage: 'lint'

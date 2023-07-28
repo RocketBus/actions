@@ -76,7 +76,7 @@ runs:
         git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
 
     - name: Lint Code
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: $NODE_PACKAGE_MANAGER run lint
 

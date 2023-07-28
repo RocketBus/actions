@@ -134,6 +134,13 @@ jobs:
         id: gitversion
         uses: gittools/actions/gitversion/execute@v0
 
+      - name: Lint
+        uses: RocketBus/actions/.github/actions/stages/lint@v1
+        with:
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+
       - name: Build
         uses: RocketBus/actions/.github/actions/stages/build@v1
         with:

@@ -67,7 +67,7 @@ runs:
         echo CHART_VERSION=$CHART_VERSION >> $GITHUB_ENV
 
     - name: Helm Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       working-directory: ${{ env.CHART_PATH }}
       run: helm lint --strict --with-subcharts $CHART_NAME

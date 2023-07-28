@@ -46,7 +46,7 @@ runs:
         git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
 
     - name: Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: ./mvnw $MAVEN_CLI_OPTS spotless:check
 
@@ -73,15 +73,16 @@ runs:
         if-no-files-found: ignore
         retention-days: 1
 
-    - name: Run Unit Tests
+    - name: Run Tests
       if: ${{ inputs.stage == 'test' }}
       shell: bash
-      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipITs=true -Dsonar.skip=true
+      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -Dsonar.skip=true
+      # run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipITs=true -Dsonar.skip=true
 
-    - name: Run Integration Tests
-      if: ${{ inputs.stage == 'test' }}
-      shell: bash
-      run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipUTs=true -Dsonar.skip=true
+    # - name: Run Integration Tests
+    #   if: ${{ inputs.stage == 'test' }}
+    #   shell: bash
+    #   run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipUTs=true -Dsonar.skip=true
 
     - name: Set up JDK for SonarQube
       if: ${{ inputs.stage == 'test' }}

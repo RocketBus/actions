@@ -42,7 +42,7 @@ runs:
           type=raw,value=${{ env.GITVERSION_SEMVER }}
 
     - name: Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       uses: hadolint/hadolint-action@v3.1.0
       with:
         dockerfile: ${{ env.DOCKERFILE_PATH }}

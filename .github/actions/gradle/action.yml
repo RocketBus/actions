@@ -21,7 +21,7 @@ runs:
       uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
 
     - name: Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: ./gradlew spotlessCheck
 
