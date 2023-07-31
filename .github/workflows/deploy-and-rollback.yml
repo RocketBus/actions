@@ -29,7 +29,7 @@ on:
         required: true
 
 env:
-  GITHUB_ACTIONS_IAM_ROLE: ${{ vars.GITHUB_ACTIONS_IAM_ROLE }}
+  ACTIONS_IAM_ROLE: ${{ vars.ACTIONS_IAM_ROLE }}
   ECR_REGION: ${{ vars.ECR_REGION }}
   HELM_VERSION: ${{ vars.HELM_VERSION }}
   CHART_PATH: ${{ inputs.chart_path }}

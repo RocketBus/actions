@@ -8,7 +8,7 @@ runs:
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: ${{ env.CODEARTIFACT_REGION }}
-        role-to-assume: ${{ env.GITHUB_ACTIONS_IAM_ROLE }}
+        role-to-assume: ${{ env.ACTIONS_IAM_ROLE }}
         role-session-name: GitHubActionsCodeArtifactSession
         role-skip-session-tagging: true
         role-duration-seconds: 1200
