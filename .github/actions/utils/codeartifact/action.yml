@@ -10,6 +10,10 @@ runs:
         aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.CODEARTIFACT_REGION }}
+        role-skip-session-tagging: true
+        role-to-assume: ${{ env.CODEARTIFACT_ROLE_TO_ASSUME }}
+        role-duration-seconds: 1200
+        role-session-name: GitHubActionsCodeArtifactSession
 
     - name: Set CodeArtifact Token
       shell: bash
