@@ -74,9 +74,7 @@ runs:
     - name: Save Image
       if: ${{ inputs.stage == 'build' }}
       shell: bash
-      env:
-        DOCKER_IMAGE_TAG: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
-      run: docker save -o container-image.tar $DOCKER_IMAGE_TAG
+      run: docker save -o container-image.tar ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
 
     - name: Archive Image Artifact
       if: ${{ inputs.stage == 'build' }}
@@ -95,8 +93,6 @@ runs:
     - name: Release Image
       if: ${{ inputs.stage == 'release' }}
       shell: bash
-      env:
-        DOCKER_IMAGE_TAG: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
       run: |
         docker load -i container-image.tar
-        docker push $DOCKER_IMAGE_TAG
+        docker push ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
