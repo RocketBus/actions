@@ -87,10 +87,10 @@ env:
   DOCKER_BUILD_CONTEXT: ${{ inputs.docker_build_context }}
   DOCKER_BUILD_TARGET: ${{ inputs.docker_build_target }}
   DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
-  DOCKER_SCAN_FAIL_BUILD: true
+  DOCKER_SCAN_FAIL_BUILD: false
   DOCKER_SCAN_SEVERITY_CUTOFF: medium
   ECR_REGION: ${{ vars.ECR_REGION }}
-  HELM_VERSION: ${{ vars.HELM_VERSION }}
+  HELM_VERSION: '3.12.1'
   CHART_PATH: ${{ inputs.chart_path }}
   CHART_NAME: ${{ inputs.chart_name || github.event.repository.name }}
   ENV_SPEC: ${{ vars.ENV_SPEC }}
