@@ -108,7 +108,7 @@ runs:
 
         ./mvnw $MAVEN_CLI_OPTS sonar:sonar $SONAR_ARGS
 
-    - name: SonarQube Quality Gate
+    - name: SonarQube Quality Gate Check
       if: ${{ inputs.stage == 'test' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
       with:
