@@ -55,10 +55,6 @@ on:
         type: string
         required: false
     secrets:
-      aws_access_key_id:
-        required: true
-      aws_secret_access_key:
-        required: true
       sonar_token:
         required: true
       slack_app_token:
@@ -70,9 +66,7 @@ on:
 
 env:
   CI: true
-  AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
-  AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
-  CODEARTIFACT_ROLE_TO_ASSUME: ${{ vars.CODEARTIFACT_ROLE_TO_ASSUME }}
+  GITHUB_ACTIONS_IAM_ROLE: ${{ vars.GITHUB_ACTIONS_IAM_ROLE }}
   CODEARTIFACT_DOMAIN: ${{ vars.CODEARTIFACT_DOMAIN }}
   CODEARTIFACT_DOMAIN_OWNER: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
   CODEARTIFACT_REGION: ${{ vars.CODEARTIFACT_REGION }}

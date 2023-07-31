@@ -7,12 +7,11 @@ runs:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.CODEARTIFACT_REGION }}
-        role-to-assume: ${{ env.CODEARTIFACT_ROLE_TO_ASSUME }}
-        role-duration-seconds: 1200
+        role-to-assume: ${{ env.GITHUB_ACTIONS_IAM_ROLE }}
         role-session-name: GitHubActionsCodeArtifactSession
+        role-skip-session-tagging: true
+        role-duration-seconds: 1200
 
     - name: Set CodeArtifact Token
       shell: bash
