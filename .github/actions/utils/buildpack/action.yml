@@ -20,7 +20,7 @@ runs:
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["nodejs"]')
           fi
 
-          if [[ -f pom.xml || -f pom.groovy || -f pom.yml || pom.yaml ]]; then
+          if [[ -f pom.xml || -f pom.groovy || -f pom.yml || -f pom.yaml ]]; then
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["java"]')
           fi
 
