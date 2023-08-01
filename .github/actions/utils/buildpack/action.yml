@@ -41,4 +41,4 @@ runs:
 
         echo buildpacks=${BUILDPACKS:-$DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT
 
-        echo $BUILDPACKS
+        echo $DETECTED_BUILDPACKS
