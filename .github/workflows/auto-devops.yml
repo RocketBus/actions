@@ -56,13 +56,13 @@ on:
         required: false
     secrets:
       sonar_token:
-        required: true
+        required: false
       slack_app_token:
-        required: true
+        required: false
       slack_bot_token:
-        required: true
+        required: false
       slack_signing_secret:
-        required: true
+        required: false
 
 env:
   CI: true
