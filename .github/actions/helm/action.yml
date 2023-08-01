@@ -49,6 +49,7 @@ runs:
     - name: Release Prepare
       if: ${{ inputs.stage == 'release' }}
       shell: bash
+      working-directory: ${{ env.CHART_PATH }}
       run: |
         if [[ -n $DOCKER_METADATA_OUTPUT_VERSION ]]; then
           yq -i '.appVersion = env(DOCKER_METADATA_OUTPUT_VERSION)' $CHART_NAME/Chart.yaml
