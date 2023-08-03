@@ -5,6 +5,9 @@ inputs:
   stage:
     description: ''
     required: true
+  helm_version:
+    description: ''
+    required: false
   independent_helm_versioning:
     description: ''
     required: false
@@ -71,7 +74,7 @@ runs:
     - name: Set up Helm
       uses: azure/setup-helm@v3
       with:
-        version: ${{ env.HELM_VERSION }}
+        version: ${{ inputs.helm_version || '3.12.2' }}
 
     - name: Configure AWS Credentials
       if: ${{ inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release' || (inputs.stage == 'deploy' && inputs.chart_path) }}
