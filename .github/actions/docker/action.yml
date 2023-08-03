@@ -67,7 +67,7 @@ runs:
       id: docker_metadata
       uses: docker/metadata-action@v4
       with:
-        images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name }}
+        images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name || github.event.repository.name }}
         tags: |
           type=ref,event=pr,prefix=${{ env.GITVERSION_MAJORMINORPATCH }}-,suffix=.{{ env.GITVERSION_PRERELEASENUMBER }}
           type=raw,priority=300,value=${{ env.GITVERSION_SEMVER }},suffix=${{ format('{0}{1}', (inputs.version_suffix && '-'), inputs.version_suffix) }},enable={{is_default_branch}}

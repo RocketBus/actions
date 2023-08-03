@@ -33,7 +33,7 @@ on:
         required: false
       docker_image_name:
         type: string
-        required: true
+        required: false
       dockerfile_path:
         type: string
         required: false
@@ -52,7 +52,7 @@ on:
         default: 'false'
       chart_path:
         type: string
-        required: true
+        required: false
     secrets:
       sonar_token:
         required: false
