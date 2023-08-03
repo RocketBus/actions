@@ -41,7 +41,7 @@ runs:
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["docker"]')
           fi
 
-          if [[ -f $CHART_PATH/$CHART_NAME/Chart.yaml ]]; then
+          if [[ -f ${CHART_PATH}/Chart.yaml ]]; then
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["helm"]')
           fi
         else

@@ -105,6 +105,8 @@ jobs:
         with:
           autodetect: ${{ inputs.autodetect_buildpacks }}
           buildpacks: ${{ inputs.buildpacks }}
+        env:
+          CHART_PATH: ${{ inputs.chart_path }}
 
       - name: Lint Helm
         if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
