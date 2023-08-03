@@ -49,17 +49,25 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: ${{ github.ref_name }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: deploy
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: ${{ github.ref_name }}
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/stages/rollback@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: ${{ github.ref_name }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: rollback
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: ${{ github.ref_name }}
 
   staging:
     name: Staging
@@ -73,17 +81,25 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: stg
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: deploy
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: stg
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/stages/rollback@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: stg
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: rollback
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: stg
 
   approval:
     name: Approval
@@ -160,20 +176,26 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
 
       - name: Deploy
-        id: deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: live
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: deploy
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: live
 
       - name: Rollback
-        id: rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/stages/rollback@v1
-        env:
-          CHART_VERSION: ${{ inputs.chart_version }}
-          ENVIRONMENT: live
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: rollback
+          chart_name: ${{ inputs.chart_name }}
+          chart_version: ${{ inputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: live
 
       - name: Slack Finish Notify
         uses: slackapi/slack-github-action@v1.24.0

@@ -1,14 +1,29 @@
 name: 'CodeArtifact Authorization Token'
 description: 'Set up CodeArtifact Authorization Token'
 
+inputs:
+  codeartifact_region:
+    description: ''
+    required: false
+    default: 'us-east-1'
+  actions_iam_role:
+    description: ''
+    required: true
+  codeartifact_domain:
+    description: ''
+    required: true
+  codeartifact_domain_owner:
+    description: ''
+    required: true
+
 runs:
   using: "composite"
   steps:
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-region: ${{ env.CODEARTIFACT_REGION }}
-        role-to-assume: ${{ env.ACTIONS_IAM_ROLE }}
+        aws-region: ${{ inputs.codeartifact_region }}
+        role-to-assume: ${{ inputs.actions_iam_role }}
         role-session-name: GitHubActionsCodeArtifactSession
         role-skip-session-tagging: true
         role-duration-seconds: 1200
@@ -19,3 +34,6 @@ runs:
         CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $CODEARTIFACT_DOMAIN --domain-owner $CODEARTIFACT_DOMAIN_OWNER --query authorizationToken --output text)
         echo "::add-mask::$CODEARTIFACT_AUTH_TOKEN"
         echo CODEARTIFACT_AUTH_TOKEN=$CODEARTIFACT_AUTH_TOKEN >> $GITHUB_ENV
+      env:
+        CODEARTIFACT_DOMAIN: ${{ inputs.codeartifact_domain }}
+        CODEARTIFACT_DOMAIN_OWNER: ${{ inputs.codeartifact_domain_owner }}

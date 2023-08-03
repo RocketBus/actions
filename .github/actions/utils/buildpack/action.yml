@@ -1,6 +1,15 @@
 name: 'Set up Buildpack'
 description: 'Set up Buildpack'
 
+inputs:
+  autodetect:
+    description: ''
+    required: false
+    default: 'true'
+  buildpacks:
+    description: ''
+    required: false
+
 outputs:
   buildpacks:
     description: ''
@@ -40,3 +49,6 @@ runs:
         fi
 
         echo buildpacks=${BUILDPACKS:-$DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT
+      env:
+        AUTODETECT_BUILDPACKS: ${{ inputs.autodetect }}
+        BUILDPACKS: ${{ inputs.buildpacks }}

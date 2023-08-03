@@ -21,7 +21,6 @@ on:
       node_version:
         type: string
         required: false
-        default: '18'
       node_package_manager:
         type: string
         required: false
@@ -29,31 +28,31 @@ on:
       jdk_version:
         type: string
         required: false
-        default: '17'
-      docker_image_name:
+      artifact_path:
         type: string
         required: false
+      docker_image_name:
+        type: string
+        required: true
       dockerfile_path:
         type: string
         required: false
-        default: Dockerfile
       docker_build_context:
         type: string
         required: false
-        default: .
       docker_build_target:
         type: string
         required: false
       docker_build_args:
         type: string
         required: false
+      independent_helm_versioning:
+        type: string
+        required: false
+        default: 'false'
       chart_path:
         type: string
-        required: false
-        default: charts
-      chart_name:
-        type: string
-        required: false
+        required: true
     secrets:
       sonar_token:
         required: false
@@ -66,47 +65,22 @@ on:
 
 env:
   CI: true
-  ACTIONS_IAM_ROLE: ${{ vars.ACTIONS_IAM_ROLE }}
-  CODEARTIFACT_DOMAIN: ${{ vars.CODEARTIFACT_DOMAIN }}
-  CODEARTIFACT_DOMAIN_OWNER: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-  CODEARTIFACT_REGION: ${{ vars.CODEARTIFACT_REGION }}
-  SONAR_TOKEN: ${{ secrets.sonar_token }}
-  SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-  AUTODETECT_BUILDPACKS: ${{ inputs.autodetect_buildpacks }}
-  BUILDPACKS: ${{ inputs.buildpacks }}
-  NODE_VERSION: ${{ inputs.node_version }}
-  NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
   NODE_OPTIONS: "--max_old_space_size=3072"
-  NODE_ENV: production
-  JDK_VERSION: ${{ inputs.jdk_version }}
+  NODE_ENV: 'production'
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
-  DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name || github.event.repository.name }}
-  DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
-  DOCKER_BUILD_CONTEXT: ${{ inputs.docker_build_context }}
-  DOCKER_BUILD_TARGET: ${{ inputs.docker_build_target }}
-  DOCKER_BUILD_ARGS: ${{ inputs.docker_build_args }}
-  DOCKER_SCAN_FAIL_BUILD: false
-  DOCKER_SCAN_SEVERITY_CUTOFF: medium
-  ECR_REGION: ${{ vars.ECR_REGION }}
-  HELM_VERSION: '3.12.1'
-  CHART_PATH: ${{ inputs.chart_path }}
-  CHART_NAME: ${{ inputs.chart_name || github.event.repository.name }}
-  ENV_SPEC: ${{ vars.ENV_SPEC }}
 
 jobs:
   build:
     name: Build
     runs-on: live
     outputs:
-      gitversion_prereleasenumber: ${{ steps.gitversion.outputs.PreReleaseNumber }}
-      gitversion_majorminorpatch: ${{ steps.gitversion.outputs.MajorMinorPatch }}
-      gitversion_semver: ${{ steps.gitversion.outputs.SemVer }}
+      buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
     strategy:
       fail-fast: true
       matrix:
-        environment: ${{ inputs.build_once && fromJson('[""]') || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && fromJson('["github.ref_name"]') || github.ref_name == github.event.repository.default_branch && fromJson('["stg", "live"]')) }}
+        environment: ${{ inputs.build_once && fromJson('[""]') || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && fromJson(format('["{0}"]', github.ref_name)) || github.ref_name == github.event.repository.default_branch && fromJson('["stg", "live"]')) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -125,46 +99,153 @@ jobs:
         with:
           versionSpec: '5.x'
 
-      - name: Determine Version
-        id: gitversion
-        uses: gittools/actions/gitversion/execute@v0
-
-      - name: Lint
-        uses: RocketBus/actions/.github/actions/stages/lint@v1
+      - name: Set up Buildpack
+        id: buildpack
+        uses: RocketBus/actions/.github/actions/utils/buildpack@v1
         with:
+          autodetect: ${{ inputs.autodetect_buildpacks }}
+          buildpacks: ${{ inputs.buildpacks }}
+
+      - name: Lint Helm
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: 'lint'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          chart_path: ${{ inputs.chart_path }}
+
+      - name: Build Node.js
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'build'
+          node_version: ${{ inputs.node_version }}
           yarnrc: ${{ vars.YARNRC }}
           npmrc: ${{ vars.NPMRC }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          node_build_env: ${{ matrix.environment }}
+          artifact_path: ${{ inputs.artifact_path }}
 
-      - name: Build
-        uses: RocketBus/actions/.github/actions/stages/build@v1
+      - name: Build Java
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
         with:
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
+          stage: 'build'
+          jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
-        env:
-          NODE_BUILD_ENV: ${{ matrix.environment }}
-          VERSION_SUFFIX: ${{ matrix.environment }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_path: ${{ inputs.artifact_path }}
+
+      - name: Build Gradle
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
+        uses: RocketBus/actions/.github/actions/gradle@v1
+        with:
+          stage: 'build'
+          jdk_version: ${{ inputs.jdk_version }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_path: ${{ inputs.artifact_path }}
+
+      - name: Build Docker
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
+        uses: RocketBus/actions/.github/actions/docker@v1
+        with:
+          stage: 'build'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          version_suffix: ${{ matrix.environment }}
+          image_name: ${{ inputs.docker_image_name }}
+          dockerfile_path: ${{ inputs.dockerfile_path }}
+          docker_build_context: ${{ inputs.docker_build_context }}
+          docker_build_target: ${{ inputs.docker_build_target }}
+          docker_build_args: ${{ inputs.docker_build_args }}
+          docker_scan_fail_build: false
+
+      - name: Build Helm
+        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: 'build'
+          independent_helm_versioning: ${{ inputs.independent_helm_versioning }}
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          version_suffix: ${{ matrix.environment }}
+          chart_path: ${{ inputs.chart_path }}
 
   test:
     name: Test
     runs-on: live
     needs:
       - build
+    env:
+      SONAR_TOKEN: ${{ secrets.sonar_token }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Test
-        uses: RocketBus/actions/.github/actions/stages/test@v1
         with:
+          fetch-depth: 0
+
+      - name: Set up .NET cli
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+        env:
+          DOTNET_INSTALL_DIR: ~/.local/share/dotnet
+
+      - name: Set up GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Test Node.js
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'test'
+          node_version: ${{ inputs.node_version }}
           yarnrc: ${{ vars.YARNRC }}
           npmrc: ${{ vars.NPMRC }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
         env:
-          GITVERSION_PRERELEASENUMBER: ${{ needs.build.outputs.gitversion_prereleasenumber }}
-          GITVERSION_MAJORMINORPATCH: ${{ needs.build.outputs.gitversion_majorminorpatch }}
-          GITVERSION_SEMVER: ${{ needs.build.outputs.gitversion_semver }}
+          NODE_ENV: 'development'
+
+      - name: Test Java
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
+        with:
+          stage: 'test'
+          jdk_version: ${{ inputs.jdk_version }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: Test Gradle
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'gradle') }}
+        uses: RocketBus/actions/.github/actions/gradle@v1
+        with:
+          stage: 'test'
+          jdk_version: ${{ inputs.jdk_version }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
   release:
     name: Release
@@ -173,26 +254,89 @@ jobs:
     needs:
       - build
       - test
+    outputs:
+      chart_name: ${{ steps.release_helm.outputs.chart_name }}
+      chart_version: ${{ steps.release_helm.outputs.chart_version }} 
     strategy:
       fail-fast: true
       matrix:
-        environment: ${{ inputs.build_once && fromJson('[""]') || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && fromJson('["github.ref_name"]') || github.ref_name == github.event.repository.default_branch && fromJson('["stg", "live"]')) }}
+        environment: ${{ inputs.build_once && fromJson('[""]') || ((github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && fromJson(format('["{0}"]', github.ref_name)) || github.ref_name == github.event.repository.default_branch && fromJson('["stg", "live"]')) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Release
-        uses: RocketBus/actions/.github/actions/stages/release@v1
         with:
+          fetch-depth: 0
+
+      - name: Set up .NET cli
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+        env:
+          DOTNET_INSTALL_DIR: ~/.local/share/dotnet
+
+      - name: Set up GitVersion
+        uses: gittools/actions/gitversion/setup@v0
+        with:
+          versionSpec: '5.x'
+
+      - name: Release Node.js
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'release'
+          node_version: ${{ inputs.node_version }}
           yarnrc: ${{ vars.YARNRC }}
           npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          node_build_env: ${{ matrix.environment }}
+
+      - name: Release Java
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
+        with:
+          stage: 'release'
+          jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
-        env:
-          GITVERSION_PRERELEASENUMBER: ${{ needs.build.outputs.gitversion_prereleasenumber }}
-          GITVERSION_MAJORMINORPATCH: ${{ needs.build.outputs.gitversion_majorminorpatch }}
-          GITVERSION_SEMVER: ${{ needs.build.outputs.gitversion_semver }}
-          NODE_BUILD_ENV: ${{ matrix.environment }}
-          VERSION_SUFFIX: ${{ matrix.environment }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: Release Gradle
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'gradle') }}
+        uses: RocketBus/actions/.github/actions/gradle@v1
+        with:
+          stage: 'release'
+          jdk_version: ${{ inputs.jdk_version }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: Release Docker
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'docker') }}
+        uses: RocketBus/actions/.github/actions/docker@v1
+        with:
+          stage: 'release'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          version_suffix: ${{ matrix.environment }}
+          image_name: ${{ inputs.docker_image_name }}
+
+      - name: Release Helm
+        id: release_helm
+        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'helm') }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: 'release'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          version_suffix: ${{ matrix.environment }}
+          chart_path: ${{ inputs.chart_path }}
 
   development:
     name: Development
@@ -207,10 +351,15 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Deploy
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
-          ENVIRONMENT: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && github.ref_name }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: deploy
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          chart_path: ${{ inputs.chart_path }}
+          chart_version: ${{ needs.release.outputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && github.ref_name }}
 
   staging:
     name: Staging
@@ -225,11 +374,16 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Deploy
-        uses: RocketBus/actions/.github/actions/stages/deploy@v1
-        env:
-          CHART_VERSION: ${{ needs.release.outputs.chart_version }}
-          ENVIRONMENT: stg
-          VERSION_SUFFIX: ${{ inputs.build_once || 'stg' }}
+        uses: RocketBus/actions/.github/actions/helm@v1
+        with:
+          stage: deploy
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          version_suffix: ${{ inputs.build_once || 'stg' }}
+          chart_path: ${{ inputs.chart_path }}
+          chart_version: ${{ needs.release.outputs.chart_version }}
+          env_spec: ${{ vars.ENV_SPEC }}
+          environment: stg
 
   zaproxy:
     name: ZAP Scan

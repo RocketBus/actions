@@ -5,23 +5,86 @@ inputs:
   stage:
     description: ''
     required: true
+  jdk_version:
+    description: ''
+    required: false
+  codeartifact_region:
+    description: ''
+    required: true
+  actions_iam_role:
+    description: ''
+    required: true
+  codeartifact_domain:
+    description: ''
+    required: true
+  codeartifact_domain_owner:
+    description: ''
+    required: true
+  artifact_path:
+    description: ''
+    required: false
+
+outputs:
+  version:
+    description: ''
+    value: ${{ steps.release_prepare.outputs.version }}
 
 runs:
   using: "composite"
   steps:
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0
+      with:
+        additionalArguments: >
+          /overrideconfig major-version-bump-message="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
+          /overrideconfig minor-version-bump-message="^(feat)(\\([\\w\\s-]*\\))?:"
+          /overrideconfig patch-version-bump-message="^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
+
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: ${{ env.JDK_VERSION }}
+        java-version: ${{ inputs.jdk_version || '17' }}
         distribution: 'corretto'
         cache: 'gradle'
         overwrite-settings: false
 
     - name: Set up CodeArtifact Authorization Token
       uses: RocketBus/actions/.github/actions/utils/codeartifact@v1
+      with:
+        codeartifact_region: ${{ inputs.codeartifact_region }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
+        codeartifact_domain: ${{ inputs.codeartifact_domain }}
+        codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
+
+    - name: Release Prepare
+      id: release_prepare
+      shell: bash
+      run: |
+        VERSION=$GITVERSION_SEMVER
+
+        if [[ $REF_NAME != $DEFAULT_BRANCH ]]; then
+          VERSION=${VERSION}-SNAPSHOT
+        fi
+
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$VERSION
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$VERSION
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
+
+        if [[ $STAGE == 'release' ]]; then
+          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git config --global user.name "$GITHUB_ACTOR"
+          git commit -a -m "chore: release $VERSION [skip ci]" || echo "nothing to commit, proceed"
+        fi
+
+        echo version=$VERSION >> $GITHUB_OUTPUT
+      env:
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        STAGE: ${{ inputs.stage }}
 
     - name: Lint
-      if: ${{ inputs.stage == 'lint' }}
+      if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: ./gradlew spotlessCheck
 
@@ -29,6 +92,24 @@ runs:
       if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: ./gradlew build -x spotlessCheck -x test
+
+    - name: Get Package Info
+      id: package_info
+      shell: bash
+      run: |
+        PACKAGE=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
+        VERSION=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version -q -DforceStdout)
+
+        echo artifact_name=${PACKAGE}-${VERSION} >> $GITHUB_OUTPUT
+
+    - name: Archive Application Artifact
+      if: ${{ inputs.stage == 'build' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+        path: ${{ inputs.artifact_path || '**/build/libs/*.jar' }}
+        if-no-files-found: ignore
+        retention-days: 1
 
     - name: Run Tests
       if: ${{ inputs.stage == 'test' }}
@@ -48,19 +129,62 @@ runs:
       if: ${{ inputs.stage == 'test' }}
       shell: bash
       run: |
-        if [[ ${{ github.event_name }} == 'pull_request' ]]; then
-          SONAR_ARGS="-Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
-            -Dsonar.pullrequest.branch=${{ github.head_ref }} \
-            -Dsonar.pullrequest.base=${{ github.base_ref }}
+        if [[ $EVENT_NAME == 'pull_request' ]]; then
+          SONAR_ARGS="-Dsonar.pullrequest.key=$PR_NUMBER \
+            -Dsonar.pullrequest.branch=$HEAD_REF \
+            -Dsonar.pullrequest.base=$BASE_REF \
             -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
-        elif [[ ${{ github.event_name }} == 'push' && ${{ github.ref_name }} != ${{ github.event.repository.default_branch }} ]]; then
-          SONAR_ARGS="-Dsonar.branch.name=${{ github.ref_name }}"
+        elif [[ $EVENT_NAME == 'push' && $REF_NAME != $DEFAULT_BRANCH ]]; then
+          SONAR_ARGS="-Dsonar.branch.name=$REF_NAME"
         fi
 
         ./gradlew sonar $SONAR_ARGS
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_REF: ${{ github.head_ref }}
+        BASE_REF: ${{ github.base_ref }}
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
 
     - name: SonarQube Quality Gate Check
       if: ${{ inputs.stage == 'test' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
       with:
         scanMetadataReportFile: build/sonar/report-task.txt
+
+    - name: Download Application Artifact
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ steps.package_info.outputs.artifact_name }}
+
+    - name: Release Artifact
+      id: release
+      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true
+        echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
+        echo version=$GITVERSION_SEMVER >> $GITHUB_OUTPUT
+        git push
+
+    - name: GitHub Release
+      if: ${{ github.ref_name == github.event.repository.default_branch }}
+      uses: softprops/action-gh-release@v1
+      with:
+        target_commitish: ${{ steps.release.outputs.sha }}
+        tag_name: v${{ steps.release.outputs.version }}
+
+    - name: Bump Version
+      if: ${{ inputs.stage == 'post_release' && github.ref_name == github.event.repository.default_branch }}
+      shell: bash
+      run: |
+        ./mvnw -B -Dstyle.color=always -e -ntp -q build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT
+        ./mvnw -B -Dstyle.color=always -e -ntp -q build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-SNAPSHOT
+        ./mvnw -B -Dstyle.color=always -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
+
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --global user.name "$GITHUB_ACTOR"
+        git commit -a -m "chore: bump version [skip ci]" || echo "nothing to commit, proceed"
+        git push

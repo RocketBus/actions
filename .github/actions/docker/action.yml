@@ -5,15 +5,56 @@ inputs:
   stage:
     description: ''
     required: true
+  ecr_region:
+    description: ''
+    required: true
+  actions_iam_role:
+    description: ''
+    required: true
+  version_suffix:
+    description: ''
+    required: false
+  image_name:
+    description: ''
+    required: true
+  dockerfile_path:
+    description: ''
+    required: false
+  docker_build_context:
+    description: ''
+    required: false
+  docker_build_target:
+    description: ''
+    required: false
+  docker_build_args:
+    description: ''
+    required: false
+  docker_scan_fail_build:
+    description: ''
+    required: false
+    default: 'true'
+  docker_scan_severity_cutoff:
+    description: ''
+    required: false
+    default: 'low'
 
 runs:
   using: "composite"
   steps:
+    - name: Determine Version
+      id: gitversion
+      uses: gittools/actions/gitversion/execute@v0
+      with:
+        additionalArguments: >
+          /overrideconfig major-version-bump-message="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
+          /overrideconfig minor-version-bump-message="^(feat)(\\([\\w\\s-]*\\))?:"
+          /overrideconfig patch-version-bump-message="^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
+
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        aws-region: ${{ env.ECR_REGION }}
-        role-to-assume: ${{ env.ACTIONS_IAM_ROLE }}
+        aws-region: ${{ inputs.ecr_region }}
+        role-to-assume: ${{ inputs.actions_iam_role }}
         role-session-name: GitHubActionsECRSession
         role-skip-session-tagging: true
         role-duration-seconds: 1200
@@ -26,17 +67,17 @@ runs:
       id: docker_metadata
       uses: docker/metadata-action@v4
       with:
-        images: ${{ steps.login_ecr.outputs.registry }}/${{ env.DOCKER_IMAGE_NAME }}
+        images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name }}
         tags: |
           type=ref,event=pr,prefix=${{ env.GITVERSION_MAJORMINORPATCH }}-,suffix=.{{ env.GITVERSION_PRERELEASENUMBER }}
-          type=raw,priority=300,value=${{ env.GITVERSION_SEMVER }},suffix=${{ env.VERSION_SUFFIX }},enable={{is_default_branch}}
+          type=raw,priority=300,value=${{ env.GITVERSION_SEMVER }},suffix=${{ format('{0}{1}', (inputs.version_suffix && '-'), inputs.version_suffix) }},enable={{is_default_branch}}
           type=raw,value=${{ env.GITVERSION_SEMVER }}
 
     - name: Lint
-      if: ${{ inputs.stage == 'lint' }}
+      if: ${{ inputs.stage == 'build' }}
       uses: hadolint/hadolint-action@v3.1.0
       with:
-        dockerfile: ${{ env.DOCKERFILE_PATH }}
+        dockerfile: ${{ inputs.dockerfile_path || 'Dockerfile' }}
 
     - name: Set up Docker Context for Buildx
       if: ${{ inputs.stage == 'build' }}
@@ -55,10 +96,10 @@ runs:
       with:
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        context: ${{ env.DOCKER_BUILD_CONTEXT }}
-        file: ${{ env.DOCKERFILE_PATH }}
-        target: ${{ env.DOCKER_BUILD_TARGET }}
-        build-args: ${{ env.DOCKER_BUILD_ARGS }}
+        context: ${{ inputs.docker_build_context || '.' }}
+        file: ${{ inputs.dockerfile_path || 'Dockerfile' }}
+        target: ${{ inputs.docker_build_target }}
+        build-args: ${{ inputs.docker_build_args }}
         labels: ${{ steps.docker_metadata.outputs.labels }}
         tags: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
         load: true
@@ -68,33 +109,33 @@ runs:
       uses: anchore/scan-action@v3
       with:
         image: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
-        fail-build: ${{ env.DOCKER_SCAN_FAIL_BUILD }}
-        severity-cutoff: ${{ env.DOCKER_SCAN_SEVERITY_CUTOFF }}
+        fail-build: ${{ inputs.docker_scan_fail_build }}
+        severity-cutoff: ${{ inputs.docker_scan_severity_cutoff }}
         output-format: table
         only-fixed: true
 
     - name: Save Image
       if: ${{ inputs.stage == 'build' }}
       shell: bash
-      run: docker save -o container-image.tar ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+      run: docker save -o docker-image.tar ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
 
     - name: Archive Image Artifact
       if: ${{ inputs.stage == 'build' }}
       uses: actions/upload-artifact@v3
       with:
-        name: container-image-${{ steps.docker_metadata.outputs.version }}
-        path: container-image.tar
+        name: docker-image-${{ steps.docker_metadata.outputs.version }}
+        path: docker-image.tar
         retention-days: 1
 
     - name: Download Image Artifact
       if: ${{ inputs.stage == 'release' }}
       uses: actions/download-artifact@v3
       with:
-        name: container-image-${{ steps.docker_metadata.outputs.version }}
+        name: docker-image-${{ steps.docker_metadata.outputs.version }}
 
     - name: Release Image
       if: ${{ inputs.stage == 'release' }}
       shell: bash
       run: |
-        docker load -i container-image.tar
+        docker load -i docker-image.tar
         docker push ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
