@@ -108,15 +108,6 @@ jobs:
         env:
           CHART_PATH: ${{ inputs.chart_path }}
 
-      - name: Lint Helm
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
-        uses: RocketBus/actions/.github/actions/helm@v1
-        with:
-          stage: 'lint'
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          chart_path: ${{ inputs.chart_path }}
-
       - name: Build Node.js
         if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1
