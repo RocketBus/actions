@@ -43,7 +43,7 @@ inputs:
 outputs:
   chart_name:
     description: ''
-    value: ${{ steps.chart_metadata.outputs.chart_name }}
+    value: ${{ steps.chart_metadata.outputs.name }}
   chart_version:
     description: ''
     value: ${{ steps.release_prepare.outputs.chart_version }}
@@ -69,7 +69,7 @@ runs:
           /overrideconfig major-version-bump-message="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
           /overrideconfig minor-version-bump-message="^(feat)(\\([\\w\\s-]*\\))?:"
           /overrideconfig patch-version-bump-message="^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
-          /overrideconfig tag-prefix=${{ steps.chart_metadata.outputs.chart_name }}-
+          /overrideconfig tag-prefix=${{ steps.chart_metadata.outputs.name }}-
 
     - name: Set up Helm
       uses: azure/setup-helm@v3
@@ -159,7 +159,7 @@ runs:
       uses: softprops/action-gh-release@v1
       with:
         target_commitish: ${{ steps.release.outputs.sha }}
-        tag_name: ${{ format('{0}-{1}', steps.chart_metadata.outputs.chart_name, steps.release_prepare.outputs.chart_version) }}
+        tag_name: ${{ format('{0}-{1}', steps.chart_metadata.outputs.name, steps.release_prepare.outputs.chart_version) }}
 
     - name: Pull Helm Package
       if: ${{ inputs.stage == 'deploy' && ! inputs.chart_path }}
