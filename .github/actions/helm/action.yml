@@ -172,9 +172,9 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        echo aws-region=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-region"') >> $GITHUB_OUTPUT
-        echo aws-iam-role=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-iam-role"') >> $GITHUB_OUTPUT
-        echo cluster-name=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."cluster-name"') >> $GITHUB_OUTPUT
+        echo aws_region=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-region"') >> $GITHUB_OUTPUT
+        echo aws_iam_role=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-iam-role"') >> $GITHUB_OUTPUT
+        echo cluster_name=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."cluster-name"') >> $GITHUB_OUTPUT
       env:
         ENV_SPEC: ${{ inputs.env_spec }}
         ENVIRONMENT: ${{ inputs.environment }}
