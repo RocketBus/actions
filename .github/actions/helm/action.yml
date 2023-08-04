@@ -53,7 +53,7 @@ runs:
   steps:
     - name: Chart Metadata
       id: chart_metadata
-      if: ${{ inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release' }}
+      if: ${{ inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release' || (inputs.stage == 'deploy' && ! inputs.chart_name) }}
       working-directory: ${{ inputs.chart_path }}
       shell: bash
       run: |
