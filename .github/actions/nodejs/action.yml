@@ -46,6 +46,7 @@ runs:
   steps:
     - name: Determine Version
       id: gitversion
+      if: ${{ ! env.GITVERSION_SEMVER }}
       uses: gittools/actions/gitversion/execute@v0
       with:
         additionalArguments: >
@@ -110,12 +111,6 @@ runs:
         fi
         if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then
           yarn version --new-version $GITVERSION_SEMVER --no-git-tag-version
-        fi
-
-        if [[ $STAGE == 'release' ]]; then
-          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git config --global user.name "$GITHUB_ACTOR"
-          git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
         fi
 
         echo version=$VERSION >> $GITHUB_OUTPUT
@@ -217,6 +212,9 @@ runs:
       shell: bash
       run: |
         $NODE_PACKAGE_MANAGER publish --tag $VERSION
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --global user.name "$GITHUB_ACTOR"
+        git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
         echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
         echo version=$GITVERSION_SEMVER >> $GITHUB_OUTPUT
         git push

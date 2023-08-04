@@ -326,6 +326,7 @@ jobs:
         uses: RocketBus/actions/.github/actions/helm@v1
         with:
           stage: 'release'
+          independent_helm_versioning: ${{ inputs.independent_helm_versioning }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           version_suffix: ${{ matrix.environment }}

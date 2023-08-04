@@ -37,6 +37,7 @@ runs:
   steps:
     - name: Determine Version
       id: gitversion
+      if: ${{ ! env.GITVERSION_SEMVER }}
       uses: gittools/actions/gitversion/execute@v0
       with:
         additionalArguments: >
@@ -80,12 +81,6 @@ runs:
         ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$VERSION
         ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$VERSION
         ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
-
-        if [[ $STAGE == 'release' ]]; then
-          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git config --global user.name "$GITHUB_ACTOR"
-          git commit -a -m "chore: release $VERSION [skip ci]" || echo "nothing to commit, proceed"
-        fi
 
         echo version=$VERSION >> $GITHUB_OUTPUT
       env:
@@ -181,6 +176,9 @@ runs:
       shell: bash
       run: |
         ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --global user.name "$GITHUB_ACTOR"
+        git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
         echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
         echo version=$GITVERSION_SEMVER >> $GITHUB_OUTPUT
         git push

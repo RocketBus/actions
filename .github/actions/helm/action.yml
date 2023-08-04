@@ -62,7 +62,7 @@ runs:
 
     - name: Determine Version
       id: gitversion
-      if: ${{ (inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release') && inputs.independent_helm_versioning }}
+      if: ${{ (inputs.independent_helm_versioning && (inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release')) || ! (inputs.independent_helm_versioning && env.GITVERSION_SEMVER) }}
       uses: gittools/actions/gitversion/execute@v0
       with:
         additionalArguments: >
@@ -123,13 +123,6 @@ runs:
 
         yq -i '.version = env(CHART_VERSION)' Chart.yaml
 
-        if [[ $STAGE == 'release' ]]; then
-          git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-          git config --global user.name "$GITHUB_ACTOR"
-          git add Chart.yaml
-          git commit -m "chore: release chart $CHART_NAME $CHART_VERSION [skip ci]" || echo "nothing to commit, proceed"
-        fi
-
         echo chart_version=$CHART_VERSION >> $GITHUB_OUTPUT
       env:
         CHART_VERSION: ${{ inputs.chart_version }}
@@ -146,6 +139,10 @@ runs:
       run: |
         helm package . --version ${CHART_VERSION}${VERSION_SUFFIX:+-$VERSION_SUFFIX}
         helm push ${CHART_NAME}-${CHART_VERSION}${VERSION_SUFFIX:+-$VERSION_SUFFIX}.tgz oci://${REGISTRY}/helm-charts
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+        git config --global user.name "$GITHUB_ACTOR"
+        git add Chart.yaml
+        git commit -m "chore: release chart $CHART_NAME $CHART_VERSION [skip ci]" || echo "nothing to commit, proceed"
         echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
         git push
       env:
@@ -175,9 +172,9 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        echo aws-region=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws_region"') >> $GITHUB_OUTPUT
-        echo aws-iam-role=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws_iam_role"') >> $GITHUB_OUTPUT
-        echo cluster-name=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."cluster_name"') >> $GITHUB_OUTPUT
+        echo aws-region=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-region"') >> $GITHUB_OUTPUT
+        echo aws-iam-role=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."aws-iam-role"') >> $GITHUB_OUTPUT
+        echo cluster-name=$(echo $ENV_SPEC | jq -r --arg ENVIRONMENT $ENVIRONMENT '.[$ENVIRONMENT]."cluster-name"') >> $GITHUB_OUTPUT
       env:
         ENV_SPEC: ${{ inputs.env_spec }}
         ENVIRONMENT: ${{ inputs.environment }}
