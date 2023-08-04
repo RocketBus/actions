@@ -43,6 +43,7 @@ runs:
   steps:
     - name: Determine Version
       id: gitversion
+      if: ${{ ! env.GITVERSION_SEMVER }}
       uses: gittools/actions/gitversion/execute@v0
       with:
         additionalArguments: >
