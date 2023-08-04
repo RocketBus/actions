@@ -163,7 +163,7 @@ runs:
       shell: bash
       run: helm pull --untar --version ${CHART_VERSION}${VERSION_SUFFIX} oci://${{ steps.login_ecr.outputs.registry }}/helm-charts/${CHART_NAME}
       env:
-        CHART_NAME: ${{ inputs.chart_name }}
+        CHART_NAME: ${{ inputs.chart_name || steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ inputs.chart_version }}
         VERSION_SUFFIX: ${{ inputs.version_suffix }}
 
@@ -250,7 +250,7 @@ runs:
       env:
         ENVIRONMENTS_PATH: ${{ inputs.environments_path || format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
-        CHART_NAME: ${{ inputs.chart_name }}
+        CHART_NAME: ${{ inputs.chart_name || steps.chart_metadata.outputs.name }}
         CHART_PATH: ${{ inputs.chart_path }}
 
     - name: Helm Rollback
@@ -272,4 +272,4 @@ runs:
       env:
         ENVIRONMENTS_PATH: ${{ inputs.environments_path || format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
-        CHART_NAME: ${{ inputs.chart_name }}
+        CHART_NAME: ${{ inputs.chart_name || steps.chart_metadata.outputs.name }}
