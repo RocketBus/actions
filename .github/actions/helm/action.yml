@@ -62,7 +62,7 @@ runs:
 
     - name: Determine Version
       id: gitversion
-      if: ${{ (inputs.independent_helm_versioning && (inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release')) || ! (inputs.independent_helm_versioning && env.GITVERSION_SEMVER) }}
+      if: ${{ (inputs.stage == 'build' || inputs.stage == 'test' || inputs.stage == 'release') && inputs.independent_helm_versioning }}
       uses: gittools/actions/gitversion/execute@v0
       with:
         additionalArguments: >
