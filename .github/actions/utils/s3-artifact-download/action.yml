@@ -33,7 +33,7 @@ runs:
       run: |
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
         aws s3 cp $S3_URI ${NAME}.tar.gz
-        tar -zvf ${NAME}.tar.gz
+        tar -zxf ${NAME}.tar.gz
       env:
         NAME: ${{ inputs.name }}
         BUCKET_NAME: ${{ inputs.bucket_name }}
