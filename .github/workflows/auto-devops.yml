@@ -122,6 +122,8 @@ jobs:
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
           node_build_env: ${{ matrix.environment }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
           artifact_path: ${{ inputs.artifact_path }}
 
       - name: Build Java
@@ -135,6 +137,8 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
           artifact_path: ${{ inputs.artifact_path }}
 
       - name: Build Gradle
@@ -147,6 +151,8 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
           artifact_path: ${{ inputs.artifact_path }}
 
       - name: Build Docker
@@ -163,6 +169,8 @@ jobs:
           docker_build_target: ${{ inputs.docker_build_target }}
           docker_build_args: ${{ inputs.docker_build_args }}
           docker_scan_fail_build: false
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Build Helm
         if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'helm') }}
@@ -286,6 +294,8 @@ jobs:
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
           node_build_env: ${{ matrix.environment }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Java
         if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'java') }}
@@ -298,6 +308,8 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Gradle
         if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'gradle') }}
@@ -309,6 +321,8 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Docker
         if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'docker') }}
@@ -319,6 +333,8 @@ jobs:
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           version_suffix: ${{ matrix.environment }}
           image_name: ${{ inputs.docker_image_name }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Helm
         id: release_helm

@@ -37,6 +37,12 @@ inputs:
     description: ''
     required: false
     default: 'low'
+  artifact_bucket_region:
+    description: ''
+    required: true
+  artifact_bucket_name:
+    description: ''
+    required: true
 
 runs:
   using: "composite"
@@ -122,17 +128,22 @@ runs:
 
     - name: Archive Image Artifact
       if: ${{ inputs.stage == 'build' }}
-      uses: actions/upload-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
         name: docker-image-${{ steps.docker_metadata.outputs.version }}
-        path: docker-image.tar
-        retention-days: 1
+        paths: docker-image.tar
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Download Image Artifact
       if: ${{ inputs.stage == 'release' }}
-      uses: actions/download-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: docker-image-${{ steps.docker_metadata.outputs.version }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Release Image
       if: ${{ inputs.stage == 'release' }}

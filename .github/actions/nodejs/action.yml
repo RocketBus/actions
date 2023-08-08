@@ -32,6 +32,12 @@ inputs:
   node_build_env:
     description: ''
     required: false
+  artifact_bucket_region:
+    description: ''
+    required: true
+  artifact_bucket_name:
+    description: ''
+    required: true
   artifact_path:
     description: ''
     required: false
@@ -153,12 +159,13 @@ runs:
 
     - name: Archive Application Artifact
       if: ${{ inputs.stage == 'build' }}
-      uses: actions/upload-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
         name: ${{ steps.package_info.outputs.artifact_name }}
-        path: ${{ inputs.artifact_path || 'build/' }}
-        if-no-files-found: ignore
-        retention-days: 1
+        paths: ${{ inputs.artifact_path || 'build/' }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Run Tests
       if: ${{ inputs.stage == 'test' }}
@@ -202,9 +209,12 @@ runs:
 
     - name: Download Application Artifact
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
-      uses: actions/download-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: ${{ steps.package_info.outputs.artifact_name }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Release Artifact
       id: release
