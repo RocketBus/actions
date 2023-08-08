@@ -1,0 +1,52 @@
+name: 'S3 Upload Artifact'
+description: ''
+
+inputs:
+  bucket_region:
+    description: ''
+    required: false
+    default: 'us-east-1'
+  actions_iam_role:
+    description: ''
+    required: true
+  bucket_name:
+    description: ''
+    required: true
+  paths:
+    description: ''
+    required: true
+  name:
+    description: ''
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: ${{ inputs.bucket_region }}
+        role-to-assume: ${{ inputs.actions_iam_role }}
+        role-session-name: GitHubActionsS3Session
+        role-skip-session-tagging: true
+        role-duration-seconds: 1200
+
+    - name: Upload Artifact
+      shell: bash
+      run: |
+        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
+
+        shopt -s globstar
+        FILE_LIST=$(for ARTIFACT_PATH in $ARTIFACT_PATHS; do ls $ARTIFACT_PATH; done)
+
+        if [[ -n $FILE_LIST ]]; then
+          tar -czf ${NAME}.tar.gz $FILE_LIST
+          aws s3 cp ${NAME}.tar.gz $S3_URI
+        fi
+      env:
+        NAME: ${{ inputs.name }}
+        ARTIFACT_PATHS: ${{ inputs.paths }}
+        BUCKET_NAME: ${{ inputs.bucket_name }}
+        REPOSITORY_ID: ${{ github.repository_id }}
+        RUN_ID: ${{ github.run_id }}
+        RUN_ATTEMPT: ${{ github.run_attempt }}
