@@ -74,7 +74,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: live
+    runs-on: actions-runner-set
     outputs:
       buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
     strategy:
@@ -185,7 +185,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - build
     env:
@@ -251,7 +251,7 @@ jobs:
   release:
     name: Release
     if: ${{ github.event_name == 'push' }}
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - build
       - test
@@ -353,7 +353,7 @@ jobs:
     if: ${{ github.event_name == 'push' && (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && inputs.type == 'application' }}
     environment:
       name: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && github.ref_name }}
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - release
     steps:
@@ -376,7 +376,7 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref_name == github.event.repository.default_branch && inputs.type == 'application' }}
     environment:
       name: staging
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - release
     steps:
@@ -398,7 +398,7 @@ jobs:
   zaproxy:
     name: ZAP Scan
     if: ${{ needs.staging.outputs.url }}
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - staging
     steps:

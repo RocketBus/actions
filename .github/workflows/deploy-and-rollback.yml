@@ -42,7 +42,7 @@ jobs:
     if: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && inputs.environment == 'development' }}
     environment:
       name: ${{ github.ref_name }}
-    runs-on: live
+    runs-on: actions-runner-set
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -74,7 +74,7 @@ jobs:
     if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging' }}
     environment:
       name: staging
-    runs-on: live
+    runs-on: actions-runner-set
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -104,7 +104,7 @@ jobs:
   approval:
     name: Approval
     if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'live' }}
-    runs-on: live
+    runs-on: actions-runner-set
     steps:
       - name: Send Approval
         id: send_approval
@@ -128,7 +128,7 @@ jobs:
     if: ${{ needs.approval.output.status == 'success' }}
     environment:
       name: live
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - approval
     steps:
