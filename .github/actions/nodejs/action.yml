@@ -69,14 +69,14 @@ runs:
     - name: Create .npmrc
       if: ${{ inputs.node_package_manager == 'npm' && inputs.npmrc }}
       shell: bash
-      run: echo $NPMRC > ~/.npmrc
+      run: echo "$NPMRC" > ~/.npmrc
       env:
         NPMRC: ${{ inputs.npmrc }}
 
     - name: Create .yarnrc.yml
       if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc }}
       shell: bash
-      run: echo $YARNRC > ~/.yarnrc.yml
+      run: echo "$YARNRC" > ~/.yarnrc.yml
       env:
         YARNRC: ${{ inputs.yarnrc }}
 

@@ -50,7 +50,7 @@ runs:
     - name: Create settings.xml
       if: ${{ inputs.maven_settings }}
       shell: bash
-      run: echo $MAVEN_SETTINGS > ~/.m2/settings.xml
+      run: echo "$MAVEN_SETTINGS" > ~/.m2/settings.xml
       env:
         MAVEN_SETTINGS: ${{ inputs.maven_settings }}
 
