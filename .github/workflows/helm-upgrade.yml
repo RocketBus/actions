@@ -1,4 +1,4 @@
-name: Deploy & Rollback
+name: Helm Upgrade
 
 on:
   workflow_call:

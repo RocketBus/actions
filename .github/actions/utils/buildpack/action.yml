@@ -37,12 +37,12 @@ runs:
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["gradle"]')
           fi
 
-          if [[ -f Dockerfile ]]; then
+          if [[ -f $DOCKERFILE ]]; then
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["docker"]')
           fi
 
           if [[ -f ${CHART_PATH}/Chart.yaml ]]; then
-            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["helm"]')
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["chart"]')
           fi
         else
           BUILDPACKS=$(echo $BUILDPACKS jq -c -r -e 'split(" ") | .')

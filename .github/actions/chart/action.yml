@@ -1,0 +1,110 @@
+name: 'Helm Chart CI'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: true
+  helm_version:
+    description: ''
+    required: true
+  ecr_region:
+    description: ''
+    required: true
+  actions_iam_role:
+    description: ''
+    required: true
+  chart_path:
+    description: ''
+    required: true
+  chart_version:
+    description: ''
+    required: false
+  app_version:
+    description: ''
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Chart Metadata
+      id: chart_metadata
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: |
+        echo name=$(yq '.name' Chart.yaml) >> $GITHUB_OUTPUT
+        echo version=$VERSION >> $GITHUB_OUTPUT
+      env:
+        CHART_VERSION: ${{ inputs.chart_version }}
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v3
+      with:
+        version: ${{ inputs.helm_version }}
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-region: ${{ inputs.ecr_region }}
+        role-to-assume: ${{ inputs.actions_iam_role }}
+        role-session-name: GitHubActionsECRSession
+        role-skip-session-tagging: true
+        role-duration-seconds: 1200
+
+    - name: Login to Amazon ECR
+      id: login_ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Install Dependencies
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: helm dep up .
+
+    - name: Helm Lint
+      if: ${{ inputs.stage == 'build' }}
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: helm lint --strict --with-subcharts .
+
+    - name: Release Prepare
+      id: release_prepare
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: |
+        if [[ -n $APP_VERSION ]]; then
+          yq -i '.appVersion = env(APP_VERSION)' Chart.yaml
+        fi
+
+        yq -i '.version = env(CHART_VERSION)' Chart.yaml
+      env:
+        STAGE: ${{ inputs.stage }}
+        CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
+        CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
+        APP_VERSION: ${{ inputs.app_version }}
+
+    - name: Release Artifact
+      id: release
+      if: ${{ inputs.stage == 'release' }}
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: |
+        helm package .
+
+        if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
+          REPOSITORY=helm-charts/stable${ENVIRONMENT:+/$ENVIRONMENT}
+        else
+          REPOSITORY=helm-charts/unstable${ENVIRONMENT:+/$ENVIRONMENT}
+        fi
+
+        aws ecr describe-repositories \
+          --repository-names $REPOSITORY/$CHART_NAME 2> /dev/null || \
+        aws ecr create-repository \
+          --repository-name $REPOSITORY/$CHART_NAME
+
+        helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://$REGISTRY/$REPOSITORY
+      env:
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+        CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
+        CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}

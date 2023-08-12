@@ -7,7 +7,7 @@ inputs:
     required: true
   jdk_version:
     description: ''
-    required: false
+    required: true
   codeartifact_region:
     description: ''
     required: true
@@ -28,30 +28,15 @@ inputs:
     required: true
   artifact_path:
     description: ''
-    required: false
-
-outputs:
-  version:
-    description: ''
-    value: ${{ steps.release_prepare.outputs.version }}
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Determine Version
-      id: gitversion
-      if: ${{ ! env.GITVERSION_SEMVER }}
-      uses: gittools/actions/gitversion/execute@v0
-      with:
-        additionalArguments: >
-          /overrideconfig major-version-bump-message="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
-          /overrideconfig minor-version-bump-message="^(feat)(\\([\\w\\s-]*\\))?:"
-          /overrideconfig patch-version-bump-message="^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
-
     - name: Set up JDK
       uses: actions/setup-java@v3
       with:
-        java-version: ${{ inputs.jdk_version || '17' }}
+        java-version: ${{ inputs.jdk_version }}
         distribution: 'corretto'
         cache: 'gradle'
         overwrite-settings: false
@@ -64,26 +49,6 @@ runs:
         codeartifact_domain: ${{ inputs.codeartifact_domain }}
         codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
 
-    - name: Release Prepare
-      id: release_prepare
-      shell: bash
-      run: |
-        VERSION=$GITVERSION_SEMVER
-
-        if [[ $REF_NAME != $DEFAULT_BRANCH ]]; then
-          VERSION=${VERSION}-SNAPSHOT
-        fi
-
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$VERSION
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$VERSION
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
-
-        echo version=$VERSION >> $GITHUB_OUTPUT
-      env:
-        REF_NAME: ${{ github.ref_name }}
-        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        STAGE: ${{ inputs.stage }}
-
     - name: Lint
       if: ${{ inputs.stage == 'build' }}
       shell: bash
@@ -94,21 +59,12 @@ runs:
       shell: bash
       run: ./gradlew build -x spotlessCheck -x test
 
-    - name: Get Package Info
-      id: package_info
-      shell: bash
-      run: |
-        PACKAGE=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -q -DforceStdout)
-        VERSION=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.version -q -DforceStdout)
-
-        echo artifact_name=${PACKAGE}-${VERSION} >> $GITHUB_OUTPUT
-
     - name: Archive Application Artifact
       if: ${{ inputs.stage == 'build' }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
-        name: ${{ steps.package_info.outputs.artifact_name }}
-        paths: ${{ inputs.artifact_path || '**/build/libs/*.jar' }}
+        name: app-artifact
+        paths: ${{ inputs.artifact_path }}
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
         actions_iam_role: ${{ inputs.actions_iam_role }}
@@ -159,7 +115,7 @@ runs:
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
-        name: ${{ steps.package_info.outputs.artifact_name }}
+        name: app-artifact
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
         actions_iam_role: ${{ inputs.actions_iam_role }}
@@ -168,31 +124,4 @@ runs:
       id: release
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       shell: bash
-      run: |
-        ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true
-        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        git config --global user.name "$GITHUB_ACTOR"
-        git commit -a -m "chore: release $GITVERSION_SEMVER [skip ci]" || echo "nothing to commit, proceed"
-        echo sha=$(git rev-parse HEAD) >> $GITHUB_OUTPUT
-        echo version=$GITVERSION_SEMVER >> $GITHUB_OUTPUT
-        git push
-
-    - name: GitHub Release
-      if: ${{ github.ref_name == github.event.repository.default_branch }}
-      uses: softprops/action-gh-release@v1
-      with:
-        target_commitish: ${{ steps.release.outputs.sha }}
-        tag_name: v${{ steps.release.outputs.version }}
-
-    - name: Bump Version
-      if: ${{ inputs.stage == 'post_release' && github.ref_name == github.event.repository.default_branch }}
-      shell: bash
-      run: |
-        ./mvnw -B -Dstyle.color=always -e -ntp -q build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion}-SNAPSHOT
-        ./mvnw -B -Dstyle.color=always -e -ntp -q build-helper:parse-version org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.incrementalVersion}-SNAPSHOT
-        ./mvnw -B -Dstyle.color=always -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
-
-        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-        git config --global user.name "$GITHUB_ACTOR"
-        git commit -a -m "chore: bump version [skip ci]" || echo "nothing to commit, proceed"
-        git push
+      run: ./gradlew publish

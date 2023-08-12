@@ -1,4 +1,4 @@
-name: 'Docker Build'
+name: 'Docker CI'
 description: ''
 
 inputs:
@@ -11,12 +11,12 @@ inputs:
   actions_iam_role:
     description: ''
     required: true
-  version_suffix:
-    description: ''
-    required: false
   image_name:
     description: ''
     required: true
+  image_tag:
+    description: ''
+    required: false
   dockerfile_path:
     description: ''
     required: false
@@ -44,19 +44,14 @@ inputs:
     description: ''
     required: true
 
+outputs:
+  image_tag:
+    description: ''
+    value: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+
 runs:
   using: "composite"
   steps:
-    - name: Determine Version
-      id: gitversion
-      if: ${{ ! env.GITVERSION_SEMVER }}
-      uses: gittools/actions/gitversion/execute@v0
-      with:
-        additionalArguments: >
-          /overrideconfig major-version-bump-message="^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?(!:|:.*\\n\\n((.+\\n)+\\n)?BREAKING CHANGE:\\s.+)"
-          /overrideconfig minor-version-bump-message="^(feat)(\\([\\w\\s-]*\\))?:"
-          /overrideconfig patch-version-bump-message="^(build|chore|ci|docs|fix|perf|refactor|revert|style|test)(\\([\\w\\s-]*\\))?:"
-
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -74,17 +69,15 @@ runs:
       id: docker_metadata
       uses: docker/metadata-action@v4
       with:
-        images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name || github.event.repository.name }}
+        images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name }}
         tags: |
-          type=ref,event=pr,prefix=${{ env.GITVERSION_MAJORMINORPATCH }}-,suffix=.{{ env.GITVERSION_PRERELEASENUMBER }}
-          type=raw,priority=300,value=${{ env.GITVERSION_SEMVER }},suffix=${{ format('{0}{1}', (inputs.version_suffix && '-'), inputs.version_suffix) }},enable={{is_default_branch}}
-          type=raw,value=${{ env.GITVERSION_SEMVER }}
+          type=raw,value=${{ inputs.image_tag }}
 
     - name: Lint
       if: ${{ inputs.stage == 'build' }}
       uses: hadolint/hadolint-action@v3.1.0
       with:
-        dockerfile: ${{ inputs.dockerfile_path || 'Dockerfile' }}
+        dockerfile: ${{ inputs.dockerfile }}
 
     - name: Set up Docker Context for Buildx
       if: ${{ inputs.stage == 'build' }}
@@ -103,8 +96,8 @@ runs:
       with:
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        context: ${{ inputs.docker_build_context || '.' }}
-        file: ${{ inputs.dockerfile_path || 'Dockerfile' }}
+        context: ${{ inputs.docker_build_context }}
+        file: ${{ inputs.dockerfile_path }}
         target: ${{ inputs.docker_build_target }}
         build-args: ${{ inputs.docker_build_args }}
         labels: ${{ steps.docker_metadata.outputs.labels }}
