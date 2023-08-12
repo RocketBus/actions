@@ -94,7 +94,7 @@ jobs:
       - name: Set up GitVersion Config File
         shell: bash
         run: |
-          echo $GITVERSION_CONFIG_FILE > GitVersion.yml
+          echo "$GITVERSION_CONFIG_FILE" > GitVersion.yml
           cat GitVersion.yml
         env:
           GITVERSION_CONFIG_FILE: ${{ vars.GITVERSION_CONFIG_FILE }}
