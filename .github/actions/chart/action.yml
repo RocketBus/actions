@@ -14,6 +14,9 @@ inputs:
   actions_iam_role:
     description: ''
     required: true
+  environment:
+    description: ''
+    required: false
   chart_path:
     description: ''
     required: true
@@ -54,6 +57,8 @@ runs:
     - name: Login to Amazon ECR
       id: login_ecr
       uses: aws-actions/amazon-ecr-login@v1
+      with:
+        mask-password: true
 
     - name: Install Dependencies
       working-directory: ${{ inputs.chart_path }}
@@ -106,5 +111,6 @@ runs:
         REF_NAME: ${{ github.ref_name }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+        ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
