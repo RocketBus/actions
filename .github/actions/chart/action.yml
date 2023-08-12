@@ -33,7 +33,7 @@ runs:
       shell: bash
       run: |
         echo name=$(yq '.name' Chart.yaml) >> $GITHUB_OUTPUT
-        echo version=$VERSION >> $GITHUB_OUTPUT
+        echo version=$CHART_VERSION >> $GITHUB_OUTPUT
       env:
         CHART_VERSION: ${{ inputs.chart_version }}
 

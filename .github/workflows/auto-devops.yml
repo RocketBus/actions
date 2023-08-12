@@ -69,7 +69,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: live
+    runs-on: actions-runner-set
     outputs:
       buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
       gitversion_semver: ${{ steps.gitversion.outputs.semver }}
@@ -198,7 +198,7 @@ jobs:
 
   test:
     name: Test
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - build
     env:
@@ -251,7 +251,7 @@ jobs:
 
   release:
     name: Release
-    runs-on: live
+    runs-on: actions-runner-set
     needs:
       - build
       - test
