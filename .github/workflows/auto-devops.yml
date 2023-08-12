@@ -93,7 +93,9 @@ jobs:
 
       - name: Set up GitVersion Config File
         shell: bash
-        run: echo $GITVERSION_CONFIG_FILE > GitVersion.yml
+        run: |
+          echo $GITVERSION_CONFIG_FILE > GitVersion.yml
+          cat GitVersion.yml
         env:
           GITVERSION_CONFIG_FILE: ${{ vars.GITVERSION_CONFIG_FILE }}
   
@@ -189,6 +191,7 @@ jobs:
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'build'
+          helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           chart_path: ${{ env.CHART_PATH }}
@@ -322,6 +325,7 @@ jobs:
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'release'
+          helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           environment: ${{ inputs.environment }}
