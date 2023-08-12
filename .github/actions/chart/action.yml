@@ -101,11 +101,6 @@ runs:
           REPOSITORY=helm-charts/unstable${ENVIRONMENT:+/$ENVIRONMENT}
         fi
 
-        aws ecr describe-repositories \
-          --repository-names $REPOSITORY/$CHART_NAME 2> /dev/null || \
-        aws ecr create-repository \
-          --repository-name $REPOSITORY/$CHART_NAME
-
         helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://$REGISTRY/$REPOSITORY
       env:
         REF_NAME: ${{ github.ref_name }}
