@@ -16,13 +16,15 @@ inputs:
     required: true
   image_tag:
     description: ''
-    required: false
-  dockerfile_path:
+    required: true
+  dockerfile:
     description: ''
     required: false
+    default: Dockerfile
   docker_build_context:
     description: ''
     required: false
+    default: '.'
   docker_build_target:
     description: ''
     required: false
@@ -99,7 +101,7 @@ runs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         context: ${{ inputs.docker_build_context }}
-        file: ${{ inputs.dockerfile_path }}
+        file: ${{ inputs.dockerfile }}
         target: ${{ inputs.docker_build_target }}
         build-args: ${{ inputs.docker_build_args }}
         labels: ${{ steps.docker_metadata.outputs.labels }}
