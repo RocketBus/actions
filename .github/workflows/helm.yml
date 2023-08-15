@@ -10,13 +10,9 @@ on:
       environment:
         type: string
         required: true
-      chart_path:
-        type: string
-        required: false
-        default: charts
       chart_name:
         type: string
-        required: false
+        required: true
       chart_version:
         type: string
         required: true
@@ -32,8 +28,7 @@ env:
   ACTIONS_IAM_ROLE: ${{ vars.ACTIONS_IAM_ROLE }}
   ECR_REGION: ${{ vars.ECR_REGION }}
   HELM_VERSION: ${{ vars.HELM_VERSION }}
-  CHART_PATH: ${{ inputs.chart_path }}
-  CHART_NAME: ${{ inputs.chart_name || github.event.repository.name }}
+  CHART_NAME: ${{ inputs.chart_name }}
   ENV_SPEC: ${{ vars.ENV_SPEC }}
 
 jobs:

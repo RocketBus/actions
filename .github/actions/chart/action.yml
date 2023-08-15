@@ -63,13 +63,13 @@ runs:
     - name: Install Dependencies
       working-directory: ${{ inputs.chart_path }}
       shell: bash
-      run: helm dep up .
+      run: helm dependency build
 
     - name: Helm Lint
       if: ${{ inputs.stage == 'build' }}
       working-directory: ${{ inputs.chart_path }}
       shell: bash
-      run: helm lint --strict --with-subcharts .
+      run: helm lint --strict --with-subcharts
 
     - name: Release Prepare
       id: release_prepare

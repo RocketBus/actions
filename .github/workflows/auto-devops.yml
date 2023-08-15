@@ -185,7 +185,6 @@ jobs:
 
       - name: Build Chart
         if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'chart') }}
-        id: build_chart
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'build'
