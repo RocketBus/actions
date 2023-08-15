@@ -49,7 +49,7 @@ inputs:
 outputs:
   image_tag:
     description: ''
-    value: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+    value: ${{ steps.docker_metadata.outputs.version }}
 
 runs:
   using: "composite"
