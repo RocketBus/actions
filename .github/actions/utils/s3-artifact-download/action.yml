@@ -37,11 +37,11 @@ runs:
       run: |
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
         aws s3 cp $S3_URI ${NAME}.tar.gz
-        tar -zxf ${NAME}.tar.gz -C ${PATH}
+        tar -zxf ${NAME}.tar.gz -C ${PATH_TO_EXTRACT}
       env:
         NAME: ${{ inputs.name }}
         BUCKET_NAME: ${{ inputs.bucket_name }}
         REPOSITORY_ID: ${{ github.repository_id }}
         RUN_ID: ${{ github.run_id }}
         RUN_ATTEMPT: ${{ github.run_attempt }}
-        PATH: ${{ inputs.path }}
+        PATH_TO_EXTRACT: ${{ inputs.path }}
