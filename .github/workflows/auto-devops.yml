@@ -61,7 +61,7 @@ env:
   NODE_OPTIONS: "--max_old_space_size=3072"
   NODE_ENV: 'production'
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
-  MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true -Dfile.encoding=UTF-8"
+  MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djansi.force=true"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
   DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name || github.event.repository.name }}
   CHART_PATH: ${{ inputs.chart_path || format('charts/{0}', github.event.repository.name) }}
@@ -325,7 +325,7 @@ jobs:
           helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          environment: ${{ inputs.environment }}
+          environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment }}
           chart_path: ${{ env.CHART_PATH }}
           chart_version: ${{ needs.build.outputs.gitversion_semver }}
           app_version: ${{ steps.release_docker.outputs.image_tag }}

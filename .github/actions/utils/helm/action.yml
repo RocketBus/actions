@@ -14,6 +14,9 @@ inputs:
   actions_iam_role:
     description: ''
     required: true
+  chart_repository:
+    description: ''
+    required: false
   chart_name:
     description: ''
     required: true
@@ -23,10 +26,6 @@ inputs:
   env_spec:
     description: ''
     required: true
-  promote_version:
-    description: ''
-    required: false
-    default: 'true'
   environment:
     description: ''
     required: true
@@ -57,24 +56,16 @@ runs:
     - name: Pull Helm Package
       shell: bash
       run:
-        HELM_ARGS="${CHART_VERSION:+--version $CHART_VERSION}"
+        HELM_ARGS="--untar --devel ${CHART_VERSION:+--version $CHART_VERSION}"
+        
+        REPOSITORY=${REPOSITORY}/${CHART_NAME}
 
-        if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
-          REPOSITORY=helm-charts/stable${ENVIRONMENT:+/$ENVIRONMENT}/${CHART_NAME}
-        else
-          REPOSITORY=helm-charts/unstable${ENVIRONMENT:+/$ENVIRONMENT}/${CHART_NAME}
-          HELM_ARGS="$HELM_ARGS --devel"
-        fi
-
-        helm pull --untar $HELM_ARGS oci://$REGISTRY/$REPOSITORY
+        helm pull $HELM_ARGS oci://$REGISTRY/$REPOSITORY
       env:
-        REF_NAME: ${{ github.ref_name }}
-        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
-        ENVIRONMENT: ${{ inputs.environment }}
+        REPOSITORY: ${{ inputs.chart_repository }}
         CHART_NAME: ${{ inputs.chart_name }}
         CHART_VERSION: ${{ inputs.chart_version }}
-        PROMOTE: ${{ inputs.promote_version }}
 
     - name: Get Environment Specs
       id: environment_specs
