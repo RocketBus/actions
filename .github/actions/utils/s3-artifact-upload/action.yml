@@ -42,6 +42,8 @@ runs:
           for PATTERN in $ARTIFACT_PATH; do
             if find $PATTERN -print -quit | grep -q .; then
               FILE_LIST="$FILE_LIST $(ls $PATTERN)"
+            else
+              echo "File not fund $PATTERN."
             fi
           done
         done
@@ -49,9 +51,12 @@ runs:
         if [[ -n $FILE_LIST ]]; then
           tar -czf ${NAME}.tar.gz $FILE_LIST
           aws s3 cp ${NAME}.tar.gz $S3_URI
+          echo $S3_URI
         else
           echo "Nenhum arquivo encontrado para upload."
         fi
+
+
       env:
         NAME: ${{ inputs.name }}
         ARTIFACT_PATHS: ${{ inputs.paths }}
