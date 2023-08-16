@@ -36,6 +36,8 @@ runs:
       run: |
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
 
+        temp_dir=$(mktemp -d)
+
         for pattern in "${ARTIFACT_PATHS[@]}"; do
           shopt -s globstar
           files=( $pattern )
