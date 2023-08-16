@@ -43,7 +43,7 @@ runs:
             if find $PATTERN -print -quit | grep -q .; then
               FILE_LIST="$FILE_LIST $(ls $PATTERN)"
             else
-              echo "File not fund $PATTERN."
+              echo "File not found $PATTERN."
             fi
           done
         done
@@ -51,12 +51,10 @@ runs:
         if [[ -n $FILE_LIST ]]; then
           tar -czf ${NAME}.tar.gz $FILE_LIST
           aws s3 cp ${NAME}.tar.gz $S3_URI
-          echo $S3_URI
+          echo "Object URL in the AWS console: https://s3.console.aws.amazon.com/s3/object/${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
         else
-          echo "Nenhum arquivo encontrado para upload."
+          echo "No files found for upload."
         fi
-
-
       env:
         NAME: ${{ inputs.name }}
         ARTIFACT_PATHS: ${{ inputs.paths }}
