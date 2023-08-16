@@ -6,16 +6,15 @@ on:
       action:
         type: string
         required: false
-        default: Deployment
       environment:
         type: string
-        required: true
+        required: false
       chart_name:
         type: string
         required: true
       chart_version:
         type: string
-        required: true
+        required: false
     secrets:
       slack_app_token:
         required: true
@@ -24,61 +23,61 @@ on:
       slack_signing_secret:
         required: true
 
-env:
-  ACTIONS_IAM_ROLE: ${{ vars.ACTIONS_IAM_ROLE }}
-  ECR_REGION: ${{ vars.ECR_REGION }}
-  HELM_VERSION: ${{ vars.HELM_VERSION }}
-  CHART_NAME: ${{ inputs.chart_name }}
-  ENV_SPEC: ${{ vars.ENV_SPEC }}
-
 jobs:
   development:
     name: Development
-    if: ${{ (github.ref_name == 'cabal' || github.ref_name == 'fallen' || github.ref_name == 'hive' || github.ref_name == 'taken' || github.ref_name == 'vex') && inputs.environment == 'development' }}
+    if: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && inputs.environment == 'development') }}
     environment:
-      name: ${{ github.ref_name }}
+      name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     runs-on: actions-runner-set
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
+          helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
-          environment: ${{ github.ref_name }}
+          environment: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
+          helm_version: ${{ vars.HELM_VERSION }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
-          environment: ${{ github.ref_name }}
+          environment: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
   staging:
     name: Staging
-    if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging' }}
+    if: ${{ github.event.workflow_run.head_branch == github.event.repository.default_branch || (github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging') }}
     environment:
       name: staging
     runs-on: actions-runner-set
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
+          helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           chart_name: ${{ inputs.chart_name }}
@@ -88,9 +87,10 @@ jobs:
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
+          helm_version: ${{ vars.HELM_VERSION }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
@@ -172,9 +172,10 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
+          helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           chart_name: ${{ inputs.chart_name }}
@@ -184,9 +185,10 @@ jobs:
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/helm@v1
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
+          helm_version: ${{ vars.HELM_VERSION }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}

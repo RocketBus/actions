@@ -53,11 +53,13 @@ runs:
     - name: Pull Helm Package
       shell: bash
       run:
+        HELM_ARGS="${CHART_VERSION:+--version $CHART_VERSION}"
+
         if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
           REPOSITORY=helm-charts/stable${ENVIRONMENT:+/$ENVIRONMENT}/${CHART_NAME}
         else
           REPOSITORY=helm-charts/unstable${ENVIRONMENT:+/$ENVIRONMENT}/${CHART_NAME}
-          HELM_ARGS="--devel"
+          HELM_ARGS="$HELM_ARGS --devel"
         fi
 
         helm pull --untar $HELM_ARGS oci://$REGISTRY/$REPOSITORY
