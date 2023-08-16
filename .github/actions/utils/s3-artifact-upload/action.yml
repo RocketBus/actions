@@ -36,20 +36,24 @@ runs:
       run: |
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
 
-        shopt -s globstar
-        FILE_LIST=""
-        for ARTIFACT_PATH in $ARTIFACT_PATHS; do
-          for PATTERN in $ARTIFACT_PATH; do
-            if find $PATTERN -print -quit | grep -q .; then
-              FILE_LIST="$FILE_LIST $(ls $PATTERN)"
+        for pattern in "${ARTIFACT_PATHS[@]}"; do
+          shopt -s globstar
+          files=( $pattern )
+          shopt -u globstar
+
+          for file in "${files[@]}"; do
+            if [ -f "$file" ] || [ -d "$file" ]; then
+              target_dir="$temp_dir/$(dirname "$file")"
+              mkdir -p "$target_dir"
+              cp -r "$file" "$target_dir"
             else
-              echo "File not found $PATTERN."
+              echo "File not fund $file."
             fi
           done
         done
 
-        if [[ -n $FILE_LIST ]]; then
-          tar -czf ${NAME}.tar.gz $FILE_LIST
+        if [[ -n $temp_dir ]]; then
+          tar -czf "${NAME}.tar.gz" -C "$temp_dir" .
           aws s3 cp ${NAME}.tar.gz $S3_URI
           echo "Object URL in the AWS console: https://s3.console.aws.amazon.com/s3/object/${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
         else
