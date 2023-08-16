@@ -37,11 +37,20 @@ runs:
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
 
         shopt -s globstar
-        FILE_LIST=$(for ARTIFACT_PATH in $ARTIFACT_PATHS; do ls $ARTIFACT_PATH; done)
+        FILE_LIST=""
+        for ARTIFACT_PATH in $ARTIFACT_PATHS; do
+          for PATTERN in $ARTIFACT_PATH; do
+            if find $PATTERN -print -quit | grep -q .; then
+              FILE_LIST="$FILE_LIST $(ls $PATTERN)"
+            fi
+          done
+        done
 
         if [[ -n $FILE_LIST ]]; then
           tar -czf ${NAME}.tar.gz $FILE_LIST
           aws s3 cp ${NAME}.tar.gz $S3_URI
+        else
+          echo "Nenhum arquivo encontrado para upload."
         fi
       env:
         NAME: ${{ inputs.name }}
