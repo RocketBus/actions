@@ -23,6 +23,10 @@ inputs:
   env_spec:
     description: ''
     required: true
+  promote_version:
+    description: ''
+    required: false
+    default: 'true'
   environment:
     description: ''
     required: true
@@ -70,6 +74,7 @@ runs:
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
         CHART_VERSION: ${{ inputs.chart_version }}
+        PROMOTE: ${{ inputs.promote_version }}
 
     - name: Get Environment Specs
       id: environment_specs

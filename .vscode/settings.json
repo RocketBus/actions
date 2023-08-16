@@ -1,5 +1,0 @@
-{
-    "yaml.schemas": {
-        "https://json.schemastore.org/github-action.json": "file:///Users/cainafeitosa/Workspace/ClickBus/actions/.github/actions/nodejs/actions.yml"
-    }
-}

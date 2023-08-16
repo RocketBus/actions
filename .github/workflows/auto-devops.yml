@@ -61,7 +61,7 @@ env:
   NODE_OPTIONS: "--max_old_space_size=3072"
   NODE_ENV: 'production'
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
-  MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true"
+  MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true -Dfile.encoding=UTF-8"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
   DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name || github.event.repository.name }}
   CHART_PATH: ${{ inputs.chart_path || format('charts/{0}', github.event.repository.name) }}
