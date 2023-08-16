@@ -34,7 +34,7 @@ runs:
     - name: Upload Artifact
       shell: bash
       run: |
-        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
+        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
 
         shopt -s globstar
         FILE_LIST=$(for ARTIFACT_PATH in $ARTIFACT_PATHS; do ls $ARTIFACT_PATH; done)

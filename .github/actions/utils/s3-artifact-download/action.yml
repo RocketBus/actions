@@ -31,7 +31,7 @@ runs:
     - name: Download Artifact
       shell: bash
       run: |
-        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${RUN_ATTEMPT}/${NAME}.tar.gz"
+        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
         aws s3 cp $S3_URI ${NAME}.tar.gz
         tar -zxf ${NAME}.tar.gz
       env:
