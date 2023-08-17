@@ -104,8 +104,8 @@ runs:
         HELM_ARGS="--wait --cleanup-on-fail --history-max 3"
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
-          RELEASE_NAME=$(yq '.releaseName | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
-          RELEASE_NAMESPACE=$(yq '.releaseNamespace | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
+          RELEASE_NAME=$(yq '.releaseName // ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
+          RELEASE_NAMESPACE=$(yq '.releaseNamespace // ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
         fi
 
         if [[ -d $ENVIRONMENT_SECRETS_DIR ]]; then
