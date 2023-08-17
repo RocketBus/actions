@@ -67,8 +67,8 @@ env:
   CHART_PATH: ${{ inputs.chart_path || format('charts/{0}', github.event.repository.name) }}
 
 jobs:
-  build:
-    name: Build
+  preflight:
+    name: Preflight
     runs-on: actions-runner-set
     outputs:
       buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
@@ -114,9 +114,19 @@ jobs:
         env:
           DOCKERFILE: ${{ inputs.dockerfile }}
           CHART_PATH: ${{ inputs.chart_path }}
+    
+  build:
+    name: Build
+    if: ${{ github.event_name == 'push' && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) || github.ref_name == github.event.repository.default_branch) }}
+    runs-on: actions-runner-set
+    needs: 
+      - preflight
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
       - name: Build Node.js
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'nodejs') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'build'
@@ -125,7 +135,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', steps.gitversion.outputs.semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -135,14 +145,14 @@ jobs:
           artifact_path: ${{ inputs.artifact_path || 'build/' }}
 
       - name: Build Java
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'java') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
         uses: RocketBus/actions/.github/actions/java@v1
         with:
           stage: 'build'
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ steps.gitversion.outputs.semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -151,7 +161,7 @@ jobs:
           artifact_path: ${{ inputs.artifact_path || '**/target/*.jar' }}
 
       - name: Build Gradle
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'gradle') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
         uses: RocketBus/actions/.github/actions/gradle@v1
         with:
           stage: 'build'
@@ -165,7 +175,7 @@ jobs:
           artifact_path: ${{ inputs.artifact_path || '**/build/libs/*.jar' }}
 
       - name: Build Docker
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'docker') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
         id: build_docker
         uses: RocketBus/actions/.github/actions/docker@v1
         with:
@@ -173,7 +183,7 @@ jobs:
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', steps.gitversion.outputs.semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           dockerfile: ${{ inputs.dockerfile }}
           docker_build_context: ${{ inputs.docker_build_context }}
           docker_build_target: ${{ inputs.docker_build_target }}
@@ -184,7 +194,7 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Build Chart
-        if: ${{ contains(fromJSON(steps.buildpack.outputs.buildpacks), 'chart') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'build'
@@ -192,13 +202,15 @@ jobs:
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           chart_path: ${{ env.CHART_PATH }}
-          chart_version: ${{ steps.gitversion.outputs.semver }}
+          chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
   test:
     name: Test
+    if: ${{ always() && needs.preflight.result == 'success' && (needs.build.result == 'skipped' || needs.build.result == 'success') && (github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref_name == github.event.repository.default_branch)) }}
     runs-on: actions-runner-set
     needs:
+      - preflight
       - build
     env:
       SONAR_TOKEN: ${{ secrets.sonar_token }}
@@ -208,7 +220,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Test Node.js
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'nodejs') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'test'
@@ -217,7 +229,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.build.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -225,20 +237,20 @@ jobs:
           NODE_ENV: 'development'
 
       - name: Test Java
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'java') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
         uses: RocketBus/actions/.github/actions/java@v1
         with:
           stage: 'test'
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.build.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
       - name: Test Gradle
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'gradle') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
         uses: RocketBus/actions/.github/actions/gradle@v1
         with:
           stage: 'test'
@@ -250,8 +262,10 @@ jobs:
 
   release:
     name: Release
+    if: ${{ always() && needs.preflight.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'skipped' || needs.test.result == 'success') }}
     runs-on: actions-runner-set
     needs:
+      - preflight
       - build
       - test
     steps:
@@ -259,7 +273,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Release Node.js
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'nodejs') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'release'
@@ -268,7 +282,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.build.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -277,14 +291,14 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Java
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'java') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
         uses: RocketBus/actions/.github/actions/java@v1
         with:
           stage: 'release'
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.build.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -292,7 +306,7 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Gradle
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'gradle') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
         uses: RocketBus/actions/.github/actions/gradle@v1
         with:
           stage: 'release'
@@ -305,7 +319,7 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Docker
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'docker') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
         id: release_docker
         uses: RocketBus/actions/.github/actions/docker@v1
         with:
@@ -313,12 +327,12 @@ jobs:
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', needs.build.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Chart
-        if: ${{ contains(fromJSON(needs.build.outputs.buildpacks), 'chart') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'release'
@@ -327,7 +341,7 @@ jobs:
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment }}
           chart_path: ${{ env.CHART_PATH }}
-          chart_version: ${{ needs.build.outputs.gitversion_semver }}
+          chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.release_docker.outputs.image_tag }}
 
       - name: Git Push Changes
@@ -339,10 +353,10 @@ jobs:
           git commit -a -m "chore: release $VERSION [skip ci]" || echo "nothing to commit, proceed"
           git push
         env:
-          VERSION: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.build.outputs.gitversion_semver) }}
+          VERSION: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.preflight.outputs.gitversion_semver) }}
 
       - name: GitHub Release
         if: ${{ github.ref_name == github.event.repository.default_branch }}
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.build.outputs.gitversion_semver) }}
+          tag_name: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.preflight.outputs.gitversion_semver) }}
