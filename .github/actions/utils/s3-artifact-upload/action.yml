@@ -36,12 +36,30 @@ runs:
       run: |
         S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
 
-        shopt -s globstar
-        FILE_LIST=$(for ARTIFACT_PATH in $ARTIFACT_PATHS; do ls $ARTIFACT_PATH; done)
+        temp_dir=$(mktemp -d)
 
-        if [[ -n $FILE_LIST ]]; then
-          tar -czf ${NAME}.tar.gz $FILE_LIST
+        for pattern in "${ARTIFACT_PATHS[@]}"; do
+          shopt -s globstar
+          files=( $pattern )
+          shopt -u globstar
+
+          for file in "${files[@]}"; do
+            if [ -f "$file" ] || [ -d "$file" ]; then
+              target_dir="$temp_dir/$(dirname "$file")"
+              mkdir -p "$target_dir"
+              cp -r "$file" "$target_dir"
+            else
+              echo "File not fund $file."
+            fi
+          done
+        done
+
+        if [[ -n $temp_dir ]]; then
+          tar -czf "${NAME}.tar.gz" -C "$temp_dir" .
           aws s3 cp ${NAME}.tar.gz $S3_URI
+          echo "Object URL in the AWS console: https://s3.console.aws.amazon.com/s3/object/${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
+        else
+          echo "No files found for upload."
         fi
       env:
         NAME: ${{ inputs.name }}
@@ -49,4 +67,3 @@ runs:
         BUCKET_NAME: ${{ inputs.bucket_name }}
         REPOSITORY_ID: ${{ github.repository_id }}
         RUN_ID: ${{ github.run_id }}
-        RUN_ATTEMPT: ${{ github.run_attempt }}
