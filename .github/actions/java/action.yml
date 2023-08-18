@@ -86,7 +86,7 @@ runs:
         ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$ARTIFACT_VERSION
         ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
       env:
-        ARTIFACT_VERSION: ${{ steps.metadata.artifact_version }}
+        ARTIFACT_VERSION: ${{ steps.metadata.outputs.artifact_version }}
 
     - name: Lint
       if: ${{ inputs.stage == 'lint' }}
