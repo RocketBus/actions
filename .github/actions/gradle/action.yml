@@ -50,7 +50,7 @@ runs:
         codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
 
     - name: Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: ./gradlew spotlessCheck
 
@@ -75,7 +75,7 @@ runs:
       run: ./gradlew test jacocoTestReport
 
     - name: Set up JDK for SonarQube
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: actions/setup-java@v3
       with:
         java-version: 11
@@ -84,7 +84,7 @@ runs:
         overwrite-settings: false
 
     - name: SonarQube Scan
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       shell: bash
       run: |
         if [[ $EVENT_NAME == 'pull_request' ]]; then
@@ -106,7 +106,7 @@ runs:
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
 
     - name: SonarQube Quality Gate Check
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
       with:
         scanMetadataReportFile: build/sonar/report-task.txt
@@ -121,7 +121,7 @@ runs:
         actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Release Artifact
-      id: release
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      id: release
       shell: bash
       run: ./gradlew publish

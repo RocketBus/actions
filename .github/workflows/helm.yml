@@ -36,6 +36,13 @@ jobs:
       name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     runs-on: actions-runner-set
     steps:
+      - name: Update Job Summary
+        if: ${{ github.event_name == 'workflow_run' }}
+        run: |
+          echo ":link: [CI]($CI_WORKFLOW)" >> $GITHUB_STEP_SUMMARY
+        env:
+          CI_WORKFLOW: ${{ github.event.workflow_run.html_url }}
+
       - name: Checkout
         uses: actions/checkout@v3
         with:

@@ -62,8 +62,8 @@ runs:
         codeartifact_domain: ${{ inputs.codeartifact_domain }}
         codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
 
-    - name: Release Prepare
-      id: release_prepare
+    - name: Project Metadata
+      id: metadata
       shell: bash
       run: |
         ARTIFACT_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -DforceStdout)
@@ -72,19 +72,24 @@ runs:
           ARTIFACT_VERSION=$ARTIFACT_VERSION-SNAPSHOT
         fi
 
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$ARTIFACT_VERSION
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$ARTIFACT_VERSION
-        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
-
         echo artifact_name=$ARTIFACT_ID-$ARTIFACT_VERSION >> $GITHUB_OUTPUT
+        echo artifact_version=$ARTIFACT_VERSION >> $GITHUB_OUTPUT
       env:
-        STAGE: ${{ inputs.stage }}
         REF_NAME: ${{ github.ref_name }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         ARTIFACT_VERSION: ${{ inputs.artifact_version }}
 
+    - name: Release Prepare
+      shell: bash
+      run: |
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set -DnewVersion=$ARTIFACT_VERSION
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:set-property -Dproperty=revision -DnewVersion=$ARTIFACT_VERSION
+        ./mvnw -B -e -ntp -q org.codehaus.mojo:versions-maven-plugin:2.11.0:commit
+      env:
+        ARTIFACT_VERSION: ${{ steps.metadata.artifact_version }}
+
     - name: Lint
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: ./mvnw $MAVEN_CLI_OPTS spotless:check
 
@@ -97,7 +102,7 @@ runs:
       if: ${{ inputs.stage == 'build' }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
-        name: ${{ steps.release_prepare.outputs.artifact_name }}
+        name: ${{ steps.metadata.outputs.artifact_name }}
         paths: ${{ inputs.artifact_path }}
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
@@ -115,7 +120,7 @@ runs:
     #   run: ./mvnw $MAVEN_CLI_OPTS verify -Dspotless.check.skip=true -DskipUTs=true -Dsonar.skip=true
 
     - name: Set up JDK for SonarQube
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: actions/setup-java@v3
       with:
         java-version: 11
@@ -124,7 +129,7 @@ runs:
         overwrite-settings: false
 
     - name: SonarQube Scan
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       shell: bash
       run: |
         if [[ $EVENT_NAME == 'pull_request' ]]; then
@@ -146,7 +151,7 @@ runs:
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
 
     - name: SonarQube Quality Gate Check
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
       with:
         scanMetadataReportFile: target/sonar/report-task.txt
@@ -155,13 +160,13 @@ runs:
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
-        name: ${{ steps.release_prepare.outputs.artifact_name }}
+        name: ${{ steps.metadata.outputs.artifact_name }}
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
         actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Release Artifact
-      id: release
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      id: release
       shell: bash
       run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true

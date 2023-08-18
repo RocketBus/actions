@@ -65,14 +65,7 @@ runs:
       shell: bash
       run: helm dependency build
 
-    - name: Helm Lint
-      if: ${{ inputs.stage == 'build' }}
-      working-directory: ${{ inputs.chart_path }}
-      shell: bash
-      run: helm lint --strict --with-subcharts
-
     - name: Release Prepare
-      id: release_prepare
       working-directory: ${{ inputs.chart_path }}
       shell: bash
       run: |
@@ -82,14 +75,19 @@ runs:
 
         yq -i '.version = env(CHART_VERSION)' Chart.yaml
       env:
-        STAGE: ${{ inputs.stage }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
         APP_VERSION: ${{ inputs.app_version }}
 
+    - name: Helm Lint
+      if: ${{ inputs.stage == 'lint' }}
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: helm lint --strict --with-subcharts
+
     - name: Release Artifact
-      id: release
       if: ${{ inputs.stage == 'release' }}
+      id: release
       working-directory: ${{ inputs.chart_path }}
       shell: bash
       run: |

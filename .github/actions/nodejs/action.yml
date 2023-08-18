@@ -4,13 +4,13 @@ description: ''
 inputs:
   stage:
     description: ''
-    required: true
+    required: false
   node_version:
     description: ''
-    required: true
+    required: false
   node_package_manager:
     description: ''
-    required: true
+    required: false
   yarnrc:
     description: ''
     required: false
@@ -19,31 +19,31 @@ inputs:
     required: false
   codeartifact_region:
     description: ''
-    required: true
+    required: false
   actions_iam_role:
     description: ''
-    required: true
+    required: false
   package_version:
     description: ''
     required: false
   codeartifact_domain:
     description: ''
-    required: true
+    required: false
   codeartifact_domain_owner:
     description: ''
-    required: true
+    required: false
   node_build_env:
     description: ''
     required: false
   artifact_bucket_region:
     description: ''
-    required: true
+    required: false
   artifact_bucket_name:
     description: ''
-    required: true
+    required: false
   artifact_path:
     description: ''
-    required: true
+    required: false
 
 runs:
   using: "composite"
@@ -96,28 +96,31 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-    - name: Release Prepare
-      id: release_prepare
+    - name: Project Metadata
+      id: metadata
       shell: bash
       run: |
         PACKAGE_NAME=$(jq ".package" package.json)
+        echo artifact_name=$PACKAGE_NAME-$PACKAGE_VERSION >> $GITHUB_OUTPUT
+        echo package_version=$PACKAGE_VERSION >> $GITHUB_OUTPUT
+      env:
+        PACKAGE_VERSION: ${{ inputs.package_version }}
 
+    - name: Release Prepare
+      shell: bash
+      run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then
           npm version $PACKAGE_VERSION --no-git-tag-version --allow-same-version
         fi
         if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then
           yarn version --new-version $PACKAGE_VERSION --no-git-tag-version
         fi
-
-        echo artifact_name=$PACKAGE_NAME-$PACKAGE_VERSION >> $GITHUB_OUTPUT
       env:
-        STAGE: ${{ inputs.stage }}
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
-        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
-        PACKAGE_VERSION: ${{ inputs.package_version }}
+        PACKAGE_VERSION: ${{ steps.metadata.package_version }}
 
     - name: Lint Code
-      if: ${{ inputs.stage == 'build' }}
+      if: ${{ inputs.stage == 'lint' }}
       shell: bash
       run: $NODE_PACKAGE_MANAGER run lint
       env:
@@ -128,6 +131,8 @@ runs:
       if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: echo build=$(jq ".scripts | has(\"build${NODE_BUILD_ENV:+:$NODE_BUILD_ENV}\")" package.json) >> $GITHUB_OUTPUT
+      env:
+        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
 
     - name: Build Artifact
       if: ${{ inputs.stage == 'build' && steps.check_scripts.outputs.build }}
@@ -141,7 +146,7 @@ runs:
       if: ${{ inputs.stage == 'build' }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
-        name: ${{ steps.release_prepare.outputs.artifact_name }}
+        name: ${{ steps.metadata.outputs.artifact_name }}
         paths: ${{ inputs.artifact_path }}
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
@@ -156,7 +161,7 @@ runs:
 
     - name: Set up SonarQube Args
       id: setup_sonar_args
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       shell: bash
       run: |
         if [[ $EVENT_NAME == 'pull_request' ]]; then
@@ -178,28 +183,30 @@ runs:
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
 
     - name: SonarQube Scan
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: sonarsource/sonarqube-scan-action@master
       with:
         args: ${{ steps.setup_sonar_args.outputs.args }}
 
     - name: SonarQube Quality Gate Check
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
 
     - name: Download Application Artifact
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
-        name: ${{ steps.release_prepare.outputs.artifact_name }}
+        name: ${{ steps.metadata.outputs.artifact_name }}
         bucket_region: ${{ inputs.artifact_bucket_region }}
         bucket_name: ${{ inputs.artifact_bucket_name }}
         actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Release Artifact
-      id: release
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+      id: release
       shell: bash
-      run: $NODE_PACKAGE_MANAGER publish
+      run: $NODE_PACKAGE_MANAGER publish --tag ${PACKAGE_VERSION}${NODE_BUILD_ENV:+-$NODE_BUILD_ENV}
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
+        PACKAGE_VERSION: ${{ steps.metadata.package_version }}
+        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
