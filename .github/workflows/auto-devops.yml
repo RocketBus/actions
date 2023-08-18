@@ -267,8 +267,6 @@ jobs:
           docker_build_context: ${{ inputs.docker_build_context }}
           docker_build_target: ${{ inputs.docker_build_target }}
           docker_build_args: ${{ inputs.docker_build_args }}
-          docker_scan_fail_build: false
-          docker_scan_severity_cutoff: low
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
@@ -381,15 +379,58 @@ jobs:
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
+  sast:
+    name: SAST
+    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && contains(fromJSON('["skipped", "success"]'), needs.build.result) && (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) }}
+    runs-on: actions-runner-set
+    needs: 
+      - preflight
+      - lint
+      - build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: SAST Node.js
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'sast'
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: SAST Docker
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+        id: build_docker
+        uses: RocketBus/actions/.github/actions/docker@v1
+        with:
+          stage: 'sast'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          image_name: ${{ env.DOCKER_IMAGE_NAME }}
+          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          docker_scan_fail_build: false
+          docker_scan_severity_cutoff: low
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+
   release:
     name: Release
-    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'skipped' || needs.test.result == 'success') }}
+    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'skipped' || needs.test.result == 'success') && (needs.sast.result == 'skipped' || needs.sast.result == 'success') }}
     runs-on: actions-runner-set
     needs:
       - preflight
       - lint
       - build
       - test
+      - sast
     steps:
       - name: Checkout
         uses: actions/checkout@v3
