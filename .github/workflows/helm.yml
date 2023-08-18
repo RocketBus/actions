@@ -31,10 +31,10 @@ on:
 jobs:
   preflight:
     name: Preflight
+    if: ${{ github.event_name == 'workflow_run' }}
     runs-on: actions-runner-set
     steps:
       - name: Update Job Summary
-        if: ${{ github.event_name == 'workflow_run' }}
         run: |
           echo ":link: [CI]($CI_WORKFLOW)" >> $GITHUB_STEP_SUMMARY
         env:
@@ -46,6 +46,8 @@ jobs:
     environment:
       name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     runs-on: actions-runner-set
+    needs:
+      - preflight
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -83,6 +85,8 @@ jobs:
     environment:
       name: staging
     runs-on: actions-runner-set
+    needs:
+      - preflight
     steps:
       - name: Checkout
         uses: actions/checkout@v3
