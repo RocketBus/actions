@@ -283,7 +283,7 @@ jobs:
 
   test:
     name: Test
-    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && contains(fromJSON('["skipped", "success"]'), needs.build.result) && (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) }}
+    if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
     runs-on: actions-runner-set
     needs:
       - preflight
@@ -380,7 +380,7 @@ jobs:
 
   sast:
     name: SAST
-    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && contains(fromJSON('["skipped", "success"]'), needs.build.result) && (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) }}
+    if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
     runs-on: actions-runner-set
     needs: 
       - preflight
@@ -422,7 +422,6 @@ jobs:
 
   release:
     name: Release
-    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'skipped' || needs.test.result == 'success') && (needs.sast.result == 'skipped' || needs.sast.result == 'success') }}
     runs-on: actions-runner-set
     needs:
       - preflight
