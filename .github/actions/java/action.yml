@@ -169,4 +169,4 @@ runs:
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       id: release
       shell: bash
-      run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true
+      run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true -Dsonar.skip=true
