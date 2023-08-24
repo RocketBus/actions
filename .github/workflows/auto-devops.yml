@@ -63,7 +63,6 @@ concurrency:
 permissions:
   id-token: write
   contents: write
-  security-events: write
   actions: read
 
 env:
@@ -420,14 +419,8 @@ jobs:
           sbom: sbom.spdx.json
           fail-build: true
           severity-cutoff: low
-          output-format: sarif
+          output-format: table
           only-fixed: true
-
-      - name: Upload Anchore Scan SARIF Report
-        if: ${{ always() && steps.scan.outcome == 'failure' || steps.scan.outcome == 'success' }}
-        uses: github/codeql-action/upload-sarif@v2
-        with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
 
   release:
     name: Release
