@@ -285,11 +285,13 @@ jobs:
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
-      - uses: anchore/sbom-action/download-syft@v0
+      - name: Set up Syft
+        uses: anchore/sbom-action/download-syft@v0
         with:
-          version: v0.87.1
+          syft-version: 0.87.1
 
-      - uses: anchore/sbom-action@v0
+      - name: Create SBOM File
+        uses: anchore/sbom-action@v0
         with:
           artifact-name: sbom.spdx.json
           format: spdx-json
@@ -393,7 +395,7 @@ jobs:
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
   sca:
-    name: SCA
+    name: Security Component Analysis
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
     runs-on: actions-runner-set
     needs: 
@@ -416,6 +418,7 @@ jobs:
           only-fixed: true
 
       - name: Upload Anchore Scan SARIF Report
+        if: ${{ always() && steps.scan.outcome == 'failure' || steps.scan.outcome == 'success' }}
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}

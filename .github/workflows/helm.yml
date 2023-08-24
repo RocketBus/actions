@@ -193,6 +193,7 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
 
       - name: Deploy
+        id: deploy
         if: ${{ inputs.action == 'Deployment' }}
         uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
@@ -207,6 +208,7 @@ jobs:
           environment: live
 
       - name: Rollback
+        id: rollback
         if: ${{ inputs.action == 'Rollback' }}
         uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
