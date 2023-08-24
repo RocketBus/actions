@@ -418,6 +418,7 @@ jobs:
           severity-cutoff: low
           output-format: table
           only-fixed: true
+          add-cpes-if-none: true
 
   release:
     name: Release
