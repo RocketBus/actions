@@ -28,6 +28,10 @@ on:
       slack_signing_secret:
         required: true
 
+permissions:
+  id-token: write
+  actions: read
+
 jobs:
   preflight:
     name: Preflight
