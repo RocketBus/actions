@@ -285,6 +285,16 @@ jobs:
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
+      - uses: anchore/sbom-action/download-syft@v0
+        with:
+          version: v0.87.1
+
+      - uses: anchore/sbom-action@v0
+        with:
+          artifact-name: sbom.spdx.json
+          format: spdx-json
+          upload-artifact-retention: 1d
+
   test:
     name: Test
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
@@ -382,8 +392,8 @@ jobs:
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-  sast:
-    name: SAST
+  sca:
+    name: Security Component Analysis
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
     runs-on: actions-runner-set
     needs: 
@@ -391,49 +401,35 @@ jobs:
       - lint
       - build
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: SAST Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
+      - uses: actions/download-artifact@v3
         with:
-          stage: 'sast'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          name: sbom.spdx.json
 
-      - name: SAST Docker
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
-        id: build_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
+      - name: Scan SBOM
+        id: scan
+        uses: anchore/scan-action@v3
         with:
-          stage: 'sast'
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          docker_scan_fail_build: false
-          docker_scan_severity_cutoff: low
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          sbom: sbom.spdx.json
+          fail-build: true
+          severity-cutoff: low
+          output-format: sarif
+          only-fixed: true
+
+      - name: Upload Anchore Scan SARIF Report
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif }}
 
   release:
     name: Release
-    if: ${{ github.ref_name == github.event.repository.default_branch }}
+    if: ${{ github.event_name == 'push' }}
     runs-on: actions-runner-set
     needs:
       - preflight
       - lint
       - build
       - test
-      - sast
+      - sca
     steps:
       - name: Checkout
         uses: actions/checkout@v3

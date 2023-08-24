@@ -159,16 +159,6 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-    - name: NPM Audit
-      if: ${{ inputs.node_package_manager == 'npm' && inputs.stage == 'sast' }}
-      shell: bash
-      run: npm audit --audit-level moderate
-
-    - name: Yarn Audit
-      if: ${{ inputs.node_package_manager == 'yarn' && inputs.stage == 'sast' }}
-      shell: bash
-      run: yarn audit --level moderate
-
     - name: Set up SonarQube Args
       id: setup_sonar_args
       if: ${{ inputs.stage == 'sonarqube' }}
