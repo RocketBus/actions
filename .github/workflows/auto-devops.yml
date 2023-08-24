@@ -393,7 +393,7 @@ jobs:
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
   sca:
-    name: Security Component Analysis
+    name: SCA
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
     runs-on: actions-runner-set
     needs: 
