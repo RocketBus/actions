@@ -414,7 +414,8 @@ jobs:
         id: scan
         uses: anchore/scan-action@v3
         with:
-          sbom: sbom.spdx.json
+          # sbom: sbom.spdx.json
+          path: '.'
           fail-build: true
           severity-cutoff: low
           output-format: table
