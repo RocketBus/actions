@@ -39,7 +39,7 @@ runs:
         FILES=()
 
         for PATTERN in "${ARTIFACT_PATHS[@]}"; do
-          for FILE in $(ls $PATTERN); do
+          for FILE in $PATTERN; do
             if [[ -f "$FILE" || -d "$FILE" ]]; then
               FILES+=("$FILE")
             else
