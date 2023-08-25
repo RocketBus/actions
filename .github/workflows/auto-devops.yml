@@ -290,6 +290,17 @@ jobs:
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
+      - name: Scan Path
+        id: scan
+        uses: anchore/scan-action@v3
+        with:
+          path: '.'
+          fail-build: true
+          severity-cutoff: low
+          output-format: table
+          only-fixed: true
+          add-cpes-if-none: true
+
       - name: Create SBOM File
         uses: anchore/sbom-action@v0
         with:
@@ -414,8 +425,7 @@ jobs:
         id: scan
         uses: anchore/scan-action@v3
         with:
-          # sbom: sbom.spdx.json
-          path: '.'
+          sbom: sbom.spdx.json
           fail-build: true
           severity-cutoff: low
           output-format: table
