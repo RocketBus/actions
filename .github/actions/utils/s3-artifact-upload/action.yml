@@ -34,30 +34,26 @@ runs:
     - name: Upload Artifact
       shell: bash
       run: |
-        S3_URI="s3://${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
+        shopt -s globstar
 
-        temp_dir=$(mktemp -d)
+        FILES=()
 
-        for pattern in "${ARTIFACT_PATHS[@]}"; do
-          shopt -s globstar
-          files=( $pattern )
-          shopt -u globstar
-
-          for file in "${files[@]}"; do
-            if [ -f "$file" ] || [ -d "$file" ]; then
-              target_dir="$temp_dir/$(dirname "$file")"
-              mkdir -p "$target_dir"
-              cp -r "$file" "$target_dir"
+        for PATTERN in "${ARTIFACT_PATHS[@]}"; do
+          for FILE in $(ls $PATTERN); do
+            if [[ -f "$FILE" || -d "$FILE" ]]; then
+              FILES+=("$FILE")
             else
-              echo "File not fund $file."
+              echo "File not found $file."
             fi
           done
         done
 
-        if [[ -n $temp_dir ]]; then
-          tar -czf "${NAME}.tar.gz" -C "$temp_dir" .
-          aws s3 cp ${NAME}.tar.gz $S3_URI
-          echo "Object URL in the AWS console: https://s3.console.aws.amazon.com/s3/object/${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
+        S3_URI="${BUCKET_NAME}/${REPOSITORY_ID}/${RUN_ID}/${NAME}.tar.gz"
+
+        if [[ ${#FILES[*]} -gt 0 ]]; then
+          tar -czf "${NAME}.tar.gz" ${FILES[@]}
+          aws s3 cp ${NAME}.tar.gz s3://$S3_URI
+          echo "Object URL in the AWS console: https://s3.console.aws.amazon.com/s3/object/$S3_URI"
         else
           echo "No files found for upload."
         fi
