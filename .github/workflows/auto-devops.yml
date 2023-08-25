@@ -32,6 +32,10 @@ on:
       artifact_path:
         type: string
         required: false
+      scan_fail_build:
+        type: boolean
+        required: false
+        default: true
       dockerfile:
         type: string
         required: false
@@ -290,17 +294,6 @@ jobs:
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
-      - name: Scan Path
-        id: scan
-        uses: anchore/scan-action@v3
-        with:
-          path: '.'
-          fail-build: true
-          severity-cutoff: low
-          output-format: table
-          only-fixed: true
-          add-cpes-if-none: true
-
       - name: Create SBOM File
         uses: anchore/sbom-action@v0
         with:
@@ -426,11 +419,13 @@ jobs:
         uses: anchore/scan-action@v3
         with:
           sbom: sbom.spdx.json
-          fail-build: true
+          fail-build: ${{ inputs.scan_fail_build }}
           severity-cutoff: low
           output-format: table
           only-fixed: true
           add-cpes-if-none: true
+          by-cve: true
+
 
   release:
     name: Release
