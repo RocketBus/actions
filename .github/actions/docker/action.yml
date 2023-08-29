@@ -96,7 +96,12 @@ runs:
         build-args: ${{ inputs.docker_build_args }}
         labels: ${{ steps.docker_metadata.outputs.labels }}
         tags: ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
-        outputs: type=tar,dest=docker-image.tar
+        load: true
+
+    - name: Save Image
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: docker save -o docker-image.tar ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
 
     - name: Archive Image Artifact
       if: ${{ inputs.stage == 'build' }}
