@@ -189,7 +189,7 @@ runs:
         args: ${{ steps.setup_sonar_args.outputs.args }}
 
     - name: SonarQube Quality Gate Check
-      if: ${{ inputs.stage == 'sonarqube' }}
+      if: ${{ inputs.stage == 'sonarqube' && github.event_name == 'pull_request' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
 
     - name: Download Application Artifact
