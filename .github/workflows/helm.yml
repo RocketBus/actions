@@ -47,7 +47,7 @@ jobs:
 
   development:
     name: Development
-    if: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && inputs.environment == 'development') }}
+    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && inputs.environment == 'development')) }}
     environment:
       name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     runs-on: actions-runner-set
@@ -86,7 +86,7 @@ jobs:
 
   staging:
     name: Staging
-    if: ${{ github.event.workflow_run.head_branch == github.event.repository.default_branch || (github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging') }}
+    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (github.event.workflow_run.head_branch == github.event.repository.default_branch || (github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging')) }}
     environment:
       name: staging
     runs-on: actions-runner-set
