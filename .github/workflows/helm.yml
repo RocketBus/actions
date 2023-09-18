@@ -143,11 +143,11 @@ jobs:
         id: approval_status
         run: echo result=${{ steps.send_approval.outcome }} >> $GITHUB_OUTPUT
     outputs:
-      status: ${{ steps.approval_status.output.result }}
+      status: ${{ steps.approval_status.outputs.result }}
 
   live:
     name: Live
-    if: ${{ needs.approval.output.status == 'success' }}
+    if: ${{ needs.approval.outputs.status == 'success' }}
     environment:
       name: live
     runs-on: actions-runner-set
