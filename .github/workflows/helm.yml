@@ -172,7 +172,7 @@ jobs:
                   "fields": [
                     {
                       "title": "Repository",
-                      "value": ${{ github.event.repository.name }},
+                      "value": "${{ github.event.repository.name }}",
                       "short": false
                     },
                     {
@@ -182,14 +182,14 @@ jobs:
                     },
                     {
                       "title": "Actor",
-                      "value": ${{ env.GITHUB_ACTOR }},
+                      "value": "${{ github.actor }}",
                       "short": true
                     },
                     {
                       "title": "Action URL",
-                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                       "short": true
-                    },
+                    }
                   ]
                 }
               ]
@@ -239,7 +239,7 @@ jobs:
                   "fields": [
                     {
                       "title": "Repository",
-                      "value": ${{ github.event.repository.name }},
+                      "value": "${{ github.event.repository.name }}",
                       "short": true
                     },
                     {
@@ -249,14 +249,14 @@ jobs:
                     },
                     {
                       "title": "Actor",
-                      "value": ${{ env.GITHUB_ACTOR }},
+                      "value": "${{ github.actor }}",
                       "short": true
                     },
                     {
                       "title": "Action URL",
-                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                       "short": true
-                    },
+                    }
                   ]
                 }
               ]
@@ -280,7 +280,7 @@ jobs:
                   "fields": [
                     {
                       "title": "Repository",
-                      "value": ${{ github.event.repository.name }},
+                      "value": "${{ github.event.repository.name }}",
                       "short": true
                     },
                     {
@@ -290,14 +290,14 @@ jobs:
                     },
                     {
                       "title": "Actor",
-                      "value": ${{ env.GITHUB_ACTOR }},
+                      "value": "${{ github.actor }}",
                       "short": true
                     },
                     {
                       "title": "Action URL",
-                      "value": "${{ env.GITHUB_SERVER_URL }}/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}",
+                      "value": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
                       "short": true
-                    },
+                    }
                   ]
                 }
               ]
