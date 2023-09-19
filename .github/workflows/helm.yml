@@ -302,3 +302,5 @@ jobs:
                 }
               ]
             }
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
