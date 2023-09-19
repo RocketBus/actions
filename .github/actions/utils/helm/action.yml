@@ -39,6 +39,7 @@ runs:
         version: ${{ inputs.helm_version }}
 
     - name: Configure AWS Credentials
+      if: ${{ inputs.stage == 'deploy' }}
       uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-region: ${{ inputs.ecr_region }}
@@ -48,12 +49,14 @@ runs:
         role-duration-seconds: 1200
 
     - name: Login to Amazon ECR
+      if: ${{ inputs.stage == 'deploy' }}
       id: login_ecr
       uses: aws-actions/amazon-ecr-login@v1
       with:
         mask-password: true
 
     - name: Pull Helm Package
+      if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run:
         HELM_ARGS="--untar --devel ${CHART_VERSION:+--version $CHART_VERSION}"
