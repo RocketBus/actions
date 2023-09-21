@@ -85,7 +85,8 @@ jobs:
     runs-on: live
     outputs:
       buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
-      gitversion_semver: ${{ steps.gitversion.outputs.semver }}
+      gitversion_semver: ${{ steps.gitversion.outputs.semVer }}
+      gitversion_majorminorpatch: ${{ steps.gitversion.outputs.majorMinorPatch }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -122,7 +123,7 @@ jobs:
         run: |
           echo ":rocket: $VERSION" >> $GITHUB_STEP_SUMMARY
         env:
-          VERSION: ${{ steps.gitversion.outputs.semver }}
+          VERSION: ${{ steps.gitversion.outputs.semVer }}
 
       - name: Set up Buildpack
         id: buildpack
@@ -166,7 +167,7 @@ jobs:
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -243,7 +244,7 @@ jobs:
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -361,7 +362,7 @@ jobs:
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -374,7 +375,7 @@ jobs:
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -465,7 +466,7 @@ jobs:
           jdk_version: ${{ inputs.jdk_version }}
           maven_settings: ${{ vars.MAVEN_SETTINGS }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
