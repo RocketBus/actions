@@ -37,7 +37,7 @@ jobs:
   preflight:
     name: Preflight
     if: ${{ github.event_name == 'workflow_run' }}
-    runs-on: actions-runner-set
+    runs-on: live
     steps:
       - name: Update Job Summary
         run: |
@@ -50,7 +50,7 @@ jobs:
     if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && inputs.environment == 'development')) }}
     environment:
       name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - preflight
     steps:
@@ -89,7 +89,7 @@ jobs:
     if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (github.event.workflow_run.head_branch == github.event.repository.default_branch || (github.ref_name == github.event.repository.default_branch && inputs.environment == 'staging')) }}
     environment:
       name: staging
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - preflight
     steps:
@@ -126,7 +126,7 @@ jobs:
   approval:
     name: Approval
     if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'live' }}
-    runs-on: actions-runner-set
+    runs-on: live
     steps:
       - name: Send Approval
         id: send_approval
@@ -150,7 +150,7 @@ jobs:
     if: ${{ needs.approval.outputs.status == 'success' }}
     environment:
       name: live
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - approval
     steps:

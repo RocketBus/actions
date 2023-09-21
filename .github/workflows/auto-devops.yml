@@ -82,7 +82,7 @@ env:
 jobs:
   preflight:
     name: Preflight
-    runs-on: actions-runner-set
+    runs-on: live
     outputs:
       buildpacks: ${{ steps.buildpack.outputs.buildpacks }}
       gitversion_semver: ${{ steps.gitversion.outputs.semver }}
@@ -136,7 +136,7 @@ jobs:
     
   lint:
     name: Lint
-    runs-on: actions-runner-set
+    runs-on: live
     needs: 
       - preflight
     steps:
@@ -208,7 +208,7 @@ jobs:
 
   build:
     name: Build
-    runs-on: actions-runner-set
+    runs-on: live
     needs: 
       - preflight
       - lint
@@ -307,7 +307,7 @@ jobs:
   test:
     name: Test
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - preflight
       - lint
@@ -404,7 +404,7 @@ jobs:
   sca:
     name: Software Composition Analysis
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: actions-runner-set
+    runs-on: live
     needs: 
       - preflight
       - lint
@@ -428,7 +428,7 @@ jobs:
   release:
     name: Release
     if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && needs.build.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.sca.result == 'success' || needs.sca.result == 'skipped') && github.event_name == 'push' }}
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - preflight
       - lint
