@@ -130,17 +130,16 @@ runs:
       id: check_scripts
       if: ${{ inputs.stage == 'build' }}
       shell: bash
-      run: echo build=$(jq ".scripts | has(\"build${NODE_BUILD_ENV:+:$NODE_BUILD_ENV}\")" package.json) >> $GITHUB_OUTPUT
-      env:
-        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
+      run: echo build=$(jq ".scripts | has(\"build\")" package.json) >> $GITHUB_OUTPUT
 
     - name: Build Artifact
       if: ${{ inputs.stage == 'build' && steps.check_scripts.outputs.build }}
       shell: bash
-      run: $NODE_PACKAGE_MANAGER run build${NODE_BUILD_ENV:+:$NODE_BUILD_ENV}
+      run: $NODE_PACKAGE_MANAGER run build
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
         NODE_BUILD_ENV: ${{ inputs.node_build_env }}
+        PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
     - name: Archive Application Artifact
       if: ${{ inputs.stage == 'build' }}
