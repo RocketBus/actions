@@ -125,6 +125,7 @@ runs:
       run: $NODE_PACKAGE_MANAGER run lint
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
+        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
 
     - name: Check Build Script on package.json
       id: check_scripts
@@ -157,6 +158,7 @@ runs:
       run: $NODE_PACKAGE_MANAGER run test
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
+        NODE_BUILD_ENV: ${{ inputs.node_build_env }}
 
     - name: Set up SonarQube Args
       id: setup_sonar_args
