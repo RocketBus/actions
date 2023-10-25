@@ -104,7 +104,7 @@ runs:
         ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
         ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
 
-        HELM_ARGS="--wait --cleanup-on-fail --history-max 3"
+        HELM_ARGS="--timeout 10m --wait --cleanup-on-fail --history-max 3"
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName // ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
