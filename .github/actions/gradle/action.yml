@@ -74,14 +74,14 @@ runs:
       shell: bash
       run: ./gradlew test jacocoTestReport
 
-    - name: Set up JDK for SonarQube
-      if: ${{ inputs.stage == 'sonarqube' }}
-      uses: actions/setup-java@v3
-      with:
-        java-version: 11
-        distribution: 'corretto'
-        cache: 'gradle'
-        overwrite-settings: false
+    # - name: Set up JDK for SonarQube
+    #   if: ${{ inputs.stage == 'sonarqube' }}
+    #   uses: actions/setup-java@v3
+    #   with:
+    #     java-version: 11
+    #     distribution: 'corretto'
+    #     cache: 'gradle'
+    #     overwrite-settings: false
 
     - name: SonarQube Scan
       if: ${{ inputs.stage == 'sonarqube' }}
