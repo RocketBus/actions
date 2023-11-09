@@ -301,9 +301,11 @@ jobs:
   build:
     name: Build
     runs-on: live
+    if: ${{ always() && needs.preflight.result == 'success' && needs.lint.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
     needs: 
       - preflight
       - lint
+      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v3
