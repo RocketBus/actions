@@ -72,7 +72,7 @@ permissions:
 env:
   CI: true
   NODE_OPTIONS: "--max_old_space_size=3072"
-  NODE_ENV: 'production'
+  NODE_ENV: 'development'
   MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djansi.force=true"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
@@ -140,8 +140,6 @@ jobs:
     runs-on: live
     needs: 
       - preflight
-    env:
-      NODE_ENV: development
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -209,12 +207,104 @@ jobs:
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
+  test:
+    name: Test
+    if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
+    runs-on: live
+    needs:
+      - preflight
+    env:
+      SONAR_TOKEN: ${{ secrets.sonar_token }}
+      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Test Node.js
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'test'
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: SonarQube Node.js
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+        uses: RocketBus/actions/.github/actions/nodejs@v1
+        with:
+          stage: 'sonarqube'
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: Test Java
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
+        with:
+          stage: 'test'
+          jdk_version: ${{ inputs.jdk_version }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: SonarQube Java
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
+        with:
+          stage: 'sonarqube'
+          jdk_version: ${{ inputs.jdk_version }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: Test Gradle
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
+        uses: RocketBus/actions/.github/actions/gradle@v1
+        with:
+          stage: 'test'
+          jdk_version: ${{ inputs.jdk_version }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
+      - name: SonarQube Gradle
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
+        uses: RocketBus/actions/.github/actions/gradle@v1
+        with:
+          stage: 'sonarqube'
+          jdk_version: ${{ inputs.jdk_version }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+
   build:
     name: Build
     runs-on: live
     needs: 
       - preflight
       - lint
+      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -307,104 +397,6 @@ jobs:
           artifact-name: sbom.spdx.json
           upload-artifact-retention: 1d
 
-  test:
-    name: Test
-    if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: live
-    needs:
-      - preflight
-      - lint
-      - build
-    env:
-      SONAR_TOKEN: ${{ secrets.sonar_token }}
-      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-      NODE_ENV: development
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Test Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'test'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-        env:
-          NODE_ENV: 'development'
-
-      - name: SonarQube Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'sonarqube'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-        env:
-          NODE_ENV: 'development'
-
-      - name: Test Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'test'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-
-      - name: SonarQube Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'sonarqube'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-
-      - name: Test Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'test'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-
-      - name: SonarQube Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'sonarqube'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-
   sca:
     name: Software Composition Analysis
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
@@ -412,6 +404,7 @@ jobs:
     needs: 
       - preflight
       - lint
+      - test
       - build
     steps:
       - uses: actions/download-artifact@v3
@@ -436,8 +429,8 @@ jobs:
     needs:
       - preflight
       - lint
-      - build
       - test
+      - build
       - sca
     steps:
       - name: Checkout
