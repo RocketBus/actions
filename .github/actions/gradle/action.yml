@@ -124,4 +124,4 @@ runs:
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       id: release
       shell: bash
-      run: ./gradlew publish
+      run: echo ./gradlew publish
