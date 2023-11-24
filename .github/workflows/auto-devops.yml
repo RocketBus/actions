@@ -61,7 +61,7 @@ on:
         required: false
 
 concurrency:
-  group: ${{ format('{0}-{1}{2}', github.workflow, github.ref, inputs.environment && format('-{0}', inputs.environment)) }}
+  group: ${{ format('{0}-{1}{2}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment)) }}
   cancel-in-progress: true
 
 permissions:
