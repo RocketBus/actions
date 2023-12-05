@@ -209,7 +209,7 @@ jobs:
   test:
     name: Test
     if: ${{ github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch }}
-    runs-on: actions-runner-set
+    runs-on: live
     needs:
       - preflight
     env:
