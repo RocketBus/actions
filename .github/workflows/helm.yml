@@ -106,7 +106,7 @@ jobs:
           helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          chart_repository: ${{ format('helm-charts/stable{0}', (! inputs.promote_version && '/stg' || '')) }}
+          chart_repository: ${{ format('helm-charts/stable{0}', (! inputs.promote_version && '/staging' || '')) }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
