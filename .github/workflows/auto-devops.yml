@@ -174,7 +174,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_majorminorpatch, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -250,7 +250,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_majorminorpatch, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -265,7 +265,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_majorminorpatch, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -340,7 +340,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_majorminorpatch, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -467,7 +467,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_majorminorpatch, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
