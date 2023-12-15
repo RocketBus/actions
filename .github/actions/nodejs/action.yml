@@ -88,14 +88,6 @@ runs:
         codeartifact_domain: ${{ inputs.codeartifact_domain }}
         codeartifact_domain_owner: ${{ inputs.codeartifact_domain_owner }}
 
-    - name: Install Dependencies
-      shell: bash
-      run: |
-        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
-        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile; fi
-      env:
-        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
-
     - name: Project Metadata
       id: metadata
       shell: bash
@@ -118,6 +110,14 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
+
+    - name: Install Dependencies
+      shell: bash
+      run: |
+        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile; fi
+      env:
+        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
     - name: Lint Code
       if: ${{ inputs.stage == 'lint' }}
