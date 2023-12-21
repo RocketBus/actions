@@ -457,6 +457,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Sync Repo 
+        shell: bash
+        run: |
+          git pull
+
       - name: Release Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1
