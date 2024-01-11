@@ -79,6 +79,8 @@ on:
     secrets:
       sonar_token:
         required: false
+      git_access_token:
+        required: true
 
 concurrency:
   group: ${{ format('{0}-{1}{2}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment)) }}
@@ -456,6 +458,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.git_access_token }}
 
       - name: Sync Repo 
         shell: bash
