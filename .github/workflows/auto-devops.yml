@@ -76,11 +76,6 @@ on:
         type: boolean
         required: false
         default: false
-    secrets:
-      sonar_token:
-        required: false
-      git_access_token:
-        required: true
 
 concurrency:
   group: ${{ format('{0}-{1}{2}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment)) }}
@@ -236,7 +231,7 @@ jobs:
     needs:
       - preflight
     env:
-      SONAR_TOKEN: ${{ secrets.sonar_token }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
     steps:
       - name: Checkout
@@ -459,7 +454,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.git_access_token }}
+          token: ${{ secrets.GIT_ACCESS_TOKEN }}
 
       - name: Sync Repo 
         shell: bash
