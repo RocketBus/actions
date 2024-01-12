@@ -20,13 +20,6 @@ on:
         type: boolean
         required: false
         default: true
-    secrets:
-      slack_app_token:
-        required: true
-      slack_bot_token:
-        required: true
-      slack_signing_secret:
-        required: true
 
 permissions:
   id-token: write
@@ -133,9 +126,9 @@ jobs:
         uses: varu3/slack-approval@main
         continue-on-error: true
         env:
-          SLACK_APP_TOKEN: ${{ secrets.slack_app_token }}
-          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
-          SLACK_SIGNING_SECRET: ${{ secrets.slack_signing_secret }}
+          SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_SIGNING_SECRET: ${{ secrets.SLACK_SIGNING_SECRET }}
           SLACK_CHANNEL_ID: C05JR25JH63 # acme-approval
         timeout-minutes: 10
 
@@ -195,7 +188,7 @@ jobs:
               ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
       - name: Deploy
         id: deploy
@@ -262,7 +255,7 @@ jobs:
               ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
       - name: Slack Fail Notify
         if: ${{ always() && (steps.deploy.outcome == 'failure' || steps.rollback.outcome == 'failure') }}
@@ -303,4 +296,4 @@ jobs:
               ]
             }
         env:
-          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
