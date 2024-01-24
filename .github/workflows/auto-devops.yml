@@ -29,6 +29,10 @@ on:
         type: string
         required: false
         default: '17'
+      maven_cli_opts:
+        type: string
+        required: false
+        default: ''
       artifact_path:
         type: string
         required: false
@@ -89,7 +93,7 @@ permissions:
 env:
   CI: true
   NODE_OPTIONS: "--max_old_space_size=4096"
-  MAVEN_CLI_OPTS: "-B -Dstyle.color=always -e -fae -ntp -U -V"
+  MAVEN_CLI_OPTS: "${{ inputs.maven_cli_opts }} -B -Dstyle.color=always -e -fae -ntp -U -V"
   MAVEN_OPTS: "-Xmx1024m -Xms512m -Dhttps.protocols=TLSv1.2 -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss,SSS -Djava.awt.headless=true -Dfile.encoding=UTF-8 -Djansi.force=true"
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true"
   DOCKER_IMAGE_NAME: ${{ inputs.docker_image_name || github.event.repository.name }}
