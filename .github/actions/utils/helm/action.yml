@@ -59,7 +59,7 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run:
-        if [ -n "$CHART_VERSION" ]; then
+        if [[ -n "$CHART_VERSION" ]]; then
           rm -rf ./charts
         fi
         
