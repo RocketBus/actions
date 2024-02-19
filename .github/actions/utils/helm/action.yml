@@ -64,6 +64,8 @@ runs:
         REPOSITORY=${REPOSITORY}/${CHART_NAME}
 
         helm pull $HELM_ARGS oci://$REGISTRY/$REPOSITORY
+        
+        ls
       env:
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
         REPOSITORY: ${{ inputs.chart_repository }}
