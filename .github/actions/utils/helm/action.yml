@@ -59,13 +59,10 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        if [[ -n "$CHART_VERSION" ]]; then
-            rm -rf ./charts
-            HELM_ARGS="--destination ./charts"
-        fi
+        HELM_ARGS="--untar --devel ${CHART_VERSION:+--version $CHART_VERSION}"
         
-        HELM_ARGS="$HELM_ARGS --untar --devel  ${CHART_VERSION:+--version $CHART_VERSION}"        
         REPOSITORY=${REPOSITORY}/${CHART_NAME}
+
         helm pull $HELM_ARGS oci://$REGISTRY/$REPOSITORY
       env:
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
@@ -103,7 +100,7 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        ENVIRONMENT_PATH=${ENVIRONMENTS_PATH}/${ENVIRONMENT}
+        ENVIRONMENT_PATH=${CHART_NAME}/environments/${ENVIRONMENT}
         ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
         ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
 
@@ -146,7 +143,6 @@ runs:
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS
       env:
-        ENVIRONMENTS_PATH: ${{ format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
 
@@ -154,7 +150,7 @@ runs:
       if: ${{ inputs.stage == 'rollback' }}
       shell: bash
       run: |
-        ENVIRONMENT_PATH=${ENVIRONMENTS_PATH}/${ENVIRONMENT}
+        ENVIRONMENT_PATH=${CHART_NAME}/environments/${ENVIRONMENT}
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
@@ -167,6 +163,5 @@ runs:
         RELEASE_REVISION=$(helm history $RELEASE_NAME -o json -n $RELEASE_NAMESPACE | jq -r --arg CHART $CHART_NAME-$CHART_VERSION '.[] | select(.chart == $CHART).revision')
         helm rollback $RELEASE_NAME $RELEASE_REVISION --wait --cleanup-on-fail -n $RELEASE_NAMESPACE
       env:
-        ENVIRONMENTS_PATH: ${{ format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
