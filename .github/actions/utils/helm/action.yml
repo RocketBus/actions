@@ -58,9 +58,9 @@ runs:
     - name: Pull Helm Package
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
-      run:
+      run: |
         if [[ -n "$CHART_VERSION" ]]; then
-          rm -rf ./charts
+            rm -rf ./charts
         fi
         
         HELM_ARGS="--untar --devel --destination ./charts ${CHART_VERSION:+--version $CHART_VERSION}"        
