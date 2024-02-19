@@ -146,6 +146,10 @@ runs:
         echo $CHART_NAME
         echo $RELEASE_NAME
 
+        echo"helm upgrade $RELEASE_NAME $CHART_NAME \
+          --install \
+          --namespace $RELEASE_NAMESPACE $HELM_ARGS"
+
         helm upgrade $RELEASE_NAME $CHART_NAME \
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS
