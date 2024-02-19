@@ -75,10 +75,8 @@ runs:
 
         yq -i '.version = env(CHART_VERSION)' Chart.yaml
       env:
-        CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
         APP_VERSION: ${{ inputs.app_version }}
-        ENVIRONMENT: ${{ inputs.environment }}
 
     - name: Helm Lint
       if: ${{ inputs.stage == 'lint' }}
