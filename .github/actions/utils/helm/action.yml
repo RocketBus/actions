@@ -59,10 +59,13 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run:
-        HELM_ARGS="--untar --devel ${CHART_VERSION:+--version $CHART_VERSION}"
+        HELM_ARGS="--untar --devel"
+        if [ -n "$CHART_VERSION" ]; then
+          HELM_ARGS="$HELM_ARGS --version $CHART_VERSION"
+        fi
         REPOSITORY=${REPOSITORY}/${CHART_NAME}
 
-        rm -rf ./charts && helm pull $HELM_ARGS oci://$REGISTRY/$REPOSITORY
+        helm pull $HELM_ARGS oci://$REGISTRY/$REPOSITORY
       env:
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
         REPOSITORY: ${{ inputs.chart_repository }}
