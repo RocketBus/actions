@@ -47,6 +47,11 @@ jobs:
     needs:
       - preflight
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
         uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
@@ -81,6 +86,11 @@ jobs:
     needs:
       - preflight
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
         uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
@@ -137,6 +147,9 @@ jobs:
     needs:
       - approval
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Slack Start Notify
         id: slack
         uses: slackapi/slack-github-action@v1.24.0
