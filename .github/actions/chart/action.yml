@@ -73,12 +73,7 @@ runs:
           yq -i '.appVersion = env(APP_VERSION)' Chart.yaml
         fi
 
-        if [[ $(yq '.nginx.image.tag' environments/${ENVIRONMENT}/values.yaml) != null ]]; then
-          yq -i '.nginx.image.tag = env(CHART_VERSION)' environments/${ENVIRONMENT}/values.yaml
-        fi
-
-        yq -i '.version = env(APP_VERSION)' Chart.yaml
-        yq -i '.image.tag = env(CHART_VERSION)' ${CHART_PATH}/environments/${ENVIRONMENT}/values.yaml
+        yq -i '.version = env(CHART_VERSION)' Chart.yaml
       env:
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
