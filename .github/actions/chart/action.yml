@@ -91,7 +91,7 @@ runs:
       working-directory: ${{ inputs.chart_path }}
       shell: bash
       run: |
-        for dir in ${CHART_PATH}/environments/*; do
+        for dir in environments/*; do
           [ "${dir##*/}" != "${ENVIRONMENT}" ] && rm -rf "$dir"
         done
 
@@ -111,4 +111,3 @@ runs:
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
-        CHART_PATH: ${{ inputs.chart_path }}
