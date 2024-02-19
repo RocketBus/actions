@@ -91,7 +91,9 @@ runs:
       working-directory: ${{ inputs.chart_path }}
       shell: bash
       run: |
-        rm -rf ${CHART_PATH}/environments/!(${ENVIRONMENT})
+        for dir in ${CHART_PATH}/environments/*; do
+          [ "${dir##*/}" != "${ENVIRONMENT}" ] && rm -rf "$dir"
+        done
 
         helm package .
 
