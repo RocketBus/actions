@@ -100,11 +100,15 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        ENVIRONMENT_PATH=${CHART_NAME}/environments/${ENVIRONMENT}
         ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
         ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
-
         HELM_ARGS="--timeout 10m --wait --cleanup-on-fail --history-max 3"
+        
+        if [ -d "${CHART_NAME}/environments/${ENVIRONMENT}" ]; then
+            ENVIRONMENT_PATH="${CHART_NAME}/environments/${ENVIRONMENT}"
+        else
+            ENVIRONMENT_PATH="${ENVIRONMENTS_PATH}/${ENVIRONMENT}"
+        fi
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName // ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
@@ -139,15 +143,11 @@ runs:
         RELEASE_NAME=${RELEASE_NAME:-$CHART_NAME}
         RELEASE_NAMESPACE=${RELEASE_NAMESPACE:-$CHART_NAME}
 
-        ls
-        echo "helm upgrade $RELEASE_NAME $CHART_NAME \
-          --install \
-          --namespace $RELEASE_NAMESPACE $HELM_ARGS"
-
         helm upgrade $RELEASE_NAME $CHART_NAME \
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS
       env:
+        ENVIRONMENTS_PATH: ${{ format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
 
@@ -155,7 +155,11 @@ runs:
       if: ${{ inputs.stage == 'rollback' }}
       shell: bash
       run: |
-        ENVIRONMENT_PATH=${ENVIRONMENTS_PATH}/${ENVIRONMENT}
+        if [ -d "${CHART_NAME}/environments/${ENVIRONMENT}" ]; then
+            ENVIRONMENT_PATH="${CHART_NAME}/environments/${ENVIRONMENT}"
+        else
+            ENVIRONMENT_PATH="${ENVIRONMENTS_PATH}/${ENVIRONMENT}"
+        fi
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
