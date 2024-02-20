@@ -94,7 +94,7 @@ runs:
         cp -r environments ${temp_dir}        
 
         for environment in environments/*; do
-          if [ "${ENVIRONMENT}" == master ] || [ "${ENVIRONMENT}" == main ]; then
+          if [ "${ENVIRONMENT}" == '' ]; then
             if [ "${environment##*/}" != "live" ] && [ "${environment##*/}" != "stg" ]; then
               rm -rf "$environment"
             fi
@@ -123,10 +123,3 @@ runs:
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
-
-    - name: Install Dependencies
-      working-directory: ${{ inputs.chart_path }}
-      shell: bash
-      run: echo $ENVIRONMENT
-      env:
-        ENVIRONMENT: ${{ inputs.environment }}
