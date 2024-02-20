@@ -86,10 +86,13 @@ runs:
 
     - name: Release Artifact
       if: ${{ inputs.stage == 'release' }}
-      id: release
       working-directory: ${{ inputs.chart_path }}
+      id: release
       shell: bash
       run: |
+        temp_dir=$(mktemp -d)
+        cp -r . ${temp_dir}
+
         for dir in environments/*; do
           [ "${dir##*/}" != "${ENVIRONMENT}" ] && rm -rf "$dir"
         done
@@ -103,6 +106,8 @@ runs:
         fi
 
         helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://$REGISTRY/$REPOSITORY
+
+        cp -r ${temp_dir}/environments/* ./environments
       env:
         REF_NAME: ${{ github.ref_name }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
