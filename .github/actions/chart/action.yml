@@ -93,6 +93,8 @@ runs:
         temp_dir=$(mktemp -d)
         cp -r environments ${temp_dir}        
 
+        echo ${ENVIRONMENT}
+
         for environment in environments/*; do
           if [ "${ENVIRONMENT}" == null ]; then
             if [ "${environment##*/}" != "live" ] && [ "${environment##*/}" != "stg" ]; then
@@ -104,7 +106,7 @@ runs:
             fi
           fi
         done
-        
+
         helm package .
 
         if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
