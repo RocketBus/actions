@@ -155,7 +155,7 @@ runs:
       if: ${{ inputs.stage == 'rollback' }}
       shell: bash
       run: |
-        ENVIRONMENT_PATH=${CHART_NAME}/environments/${ENVIRONMENT}
+        ENVIRONMENT_PATH=${ENVIRONMENTS_PATH}/${ENVIRONMENT}
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName | ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
@@ -168,5 +168,6 @@ runs:
         RELEASE_REVISION=$(helm history $RELEASE_NAME -o json -n $RELEASE_NAMESPACE | jq -r --arg CHART $CHART_NAME-$CHART_VERSION '.[] | select(.chart == $CHART).revision')
         helm rollback $RELEASE_NAME $RELEASE_REVISION --wait --cleanup-on-fail -n $RELEASE_NAMESPACE
       env:
+        ENVIRONMENTS_PATH: ${{ format('charts/{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
