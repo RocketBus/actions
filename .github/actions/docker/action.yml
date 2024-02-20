@@ -113,14 +113,14 @@ runs:
         bucket_name: ${{ inputs.artifact_bucket_name }}
         actions_iam_role: ${{ inputs.actions_iam_role }}
 
-    - name: Download Image Artifact
-      if: ${{ inputs.stage == 'release' }}
-      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
-      with:
-        name: docker-image-${{ steps.docker_metadata.outputs.version }}
-        bucket_region: ${{ inputs.artifact_bucket_region }}
-        bucket_name: ${{ inputs.artifact_bucket_name }}
-        actions_iam_role: ${{ inputs.actions_iam_role }}
+    # - name: Download Image Artifact
+    #   if: ${{ inputs.stage == 'release' }}
+    #   uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
+    #   with:
+    #     name: docker-image-${{ steps.docker_metadata.outputs.version }}
+    #     bucket_region: ${{ inputs.artifact_bucket_region }}
+    #     bucket_name: ${{ inputs.artifact_bucket_name }}
+    #     actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Load Image
       if: ${{ inputs.stage == 'release' }}
