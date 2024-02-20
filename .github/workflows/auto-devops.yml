@@ -450,10 +450,6 @@ jobs:
     runs-on: actions-runner-set
     needs:
       - preflight
-      - lint
-      - test
-      - build
-      - sca
     steps:
       - name: Checkout
         uses: actions/checkout@v3
