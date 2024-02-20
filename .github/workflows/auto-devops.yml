@@ -446,7 +446,6 @@ jobs:
 
   release:
     name: Release
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && needs.build.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.sca.result == 'success' || needs.sca.result == 'skipped') && github.event_name == 'push' }}
     runs-on: actions-runner-set
     needs:
       - preflight
