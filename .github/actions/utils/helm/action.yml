@@ -140,11 +140,11 @@ runs:
         RELEASE_NAMESPACE=${RELEASE_NAMESPACE:-$CHART_NAME}
 
         ls
-        echo "helm upgrade $RELEASE_NAME ./charts/$CHART_NAME \
+        echo "helm upgrade $RELEASE_NAME $CHART_NAME \
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS"
 
-        helm upgrade $RELEASE_NAME ./charts/$CHART_NAME \
+        helm upgrade $RELEASE_NAME $CHART_NAME \
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS
       env:
