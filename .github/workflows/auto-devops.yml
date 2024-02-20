@@ -483,20 +483,20 @@ jobs:
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
-      - name: Release Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'release'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+      # - name: Release Java
+      #   if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+      #   uses: RocketBus/actions/.github/actions/java@v1
+      #   with:
+      #     stage: 'release'
+      #     jdk_version: ${{ inputs.jdk_version }}
+      #     maven_settings: ${{ vars.MAVEN_SETTINGS }}
+      #     actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+      #     artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+      #     codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+      #     codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+      #     codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+      #     artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+      #     artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Gradle
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
