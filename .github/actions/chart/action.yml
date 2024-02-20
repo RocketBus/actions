@@ -91,7 +91,7 @@ runs:
       shell: bash
       run: |
         temp_dir=$(mktemp -d)
-        cp -r . ${temp_dir}
+        cp -r environments ${temp_dir}
 
 
         echo "${temp_dir}"
