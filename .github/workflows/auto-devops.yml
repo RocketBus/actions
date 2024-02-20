@@ -155,294 +155,294 @@ jobs:
           DOCKERFILE: ${{ inputs.dockerfile }}
           CHART_PATH: ${{ inputs.chart_path }}
     
-  lint:
-    name: Lint
-    if: ${{ !inputs.lint_disabled }}
-    runs-on: actions-runner-set
-    needs: 
-      - preflight
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # lint:
+  #   name: Lint
+  #   if: ${{ !inputs.lint_disabled }}
+  #   runs-on: actions-runner-set
+  #   needs: 
+  #     - preflight
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Lint Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'lint'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Lint Node.js
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+  #       uses: RocketBus/actions/.github/actions/nodejs@v1
+  #       with:
+  #         stage: 'lint'
+  #         node_version: ${{ inputs.node_version }}
+  #         yarnrc: ${{ vars.YARNRC }}
+  #         npmrc: ${{ vars.NPMRC }}
+  #         node_package_manager: ${{ inputs.node_package_manager }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: Lint Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'lint'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Lint Java
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+  #       uses: RocketBus/actions/.github/actions/java@v1
+  #       with:
+  #         stage: 'lint'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         maven_settings: ${{ vars.MAVEN_SETTINGS }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: Lint Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'lint'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Lint Gradle
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
+  #       uses: RocketBus/actions/.github/actions/gradle@v1
+  #       with:
+  #         stage: 'lint'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: Lint Docker
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
-        id: build_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
-        with:
-          stage: 'lint'
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          dockerfile: ${{ inputs.dockerfile }}
+  #     - name: Lint Docker
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+  #       id: build_docker
+  #       uses: RocketBus/actions/.github/actions/docker@v1
+  #       with:
+  #         stage: 'lint'
+  #         ecr_region: ${{ vars.ECR_REGION }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         image_name: ${{ env.DOCKER_IMAGE_NAME }}
+  #         image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+  #         dockerfile: ${{ inputs.dockerfile }}
 
-      - name: Lint Chart
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
-        uses: RocketBus/actions/.github/actions/chart@acme-4751
-        with:
-          stage: 'lint'
-          helm_version: ${{ vars.HELM_VERSION }}
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          chart_path: ${{ env.CHART_PATH }}
-          chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
-          app_version: ${{ steps.build_docker.outputs.image_tag }}
+  #     - name: Lint Chart
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
+  #       uses: RocketBus/actions/.github/actions/chart@acme-4751
+  #       with:
+  #         stage: 'lint'
+  #         helm_version: ${{ vars.HELM_VERSION }}
+  #         ecr_region: ${{ vars.ECR_REGION }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         chart_path: ${{ env.CHART_PATH }}
+  #         chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
+  #         app_version: ${{ steps.build_docker.outputs.image_tag }}
 
-  test:
-    name: Test
-    if: ${{ (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) && !inputs.test_disabled }}
-    runs-on: live
-    needs:
-      - preflight
-    env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # test:
+  #   name: Test
+  #   if: ${{ (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) && !inputs.test_disabled }}
+  #   runs-on: live
+  #   needs:
+  #     - preflight
+  #   env:
+  #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+  #     SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Test Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'test'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Test Node.js
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+  #       uses: RocketBus/actions/.github/actions/nodejs@v1
+  #       with:
+  #         stage: 'test'
+  #         node_version: ${{ inputs.node_version }}
+  #         yarnrc: ${{ vars.YARNRC }}
+  #         npmrc: ${{ vars.NPMRC }}
+  #         node_package_manager: ${{ inputs.node_package_manager }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: SonarQube Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'sonarqube'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: SonarQube Node.js
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
+  #       uses: RocketBus/actions/.github/actions/nodejs@v1
+  #       with:
+  #         stage: 'sonarqube'
+  #         node_version: ${{ inputs.node_version }}
+  #         yarnrc: ${{ vars.YARNRC }}
+  #         npmrc: ${{ vars.NPMRC }}
+  #         node_package_manager: ${{ inputs.node_package_manager }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: Test Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'test'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Test Java
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+  #       uses: RocketBus/actions/.github/actions/java@v1
+  #       with:
+  #         stage: 'test'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         maven_settings: ${{ vars.MAVEN_SETTINGS }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: SonarQube Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'sonarqube'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: SonarQube Java
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+  #       uses: RocketBus/actions/.github/actions/java@v1
+  #       with:
+  #         stage: 'sonarqube'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         maven_settings: ${{ vars.MAVEN_SETTINGS }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: Test Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'test'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: Test Gradle
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
+  #       uses: RocketBus/actions/.github/actions/gradle@v1
+  #       with:
+  #         stage: 'test'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      - name: SonarQube Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'sonarqube'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #     - name: SonarQube Gradle
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') }}
+  #       uses: RocketBus/actions/.github/actions/gradle@v1
+  #       with:
+  #         stage: 'sonarqube'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-  build:
-    name: Build
-    runs-on: actions-runner-set
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
-    needs: 
-      - preflight
-      - lint
-      - test
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # build:
+  #   name: Build
+  #   runs-on: actions-runner-set
+  #   if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
+  #   needs: 
+  #     - preflight
+  #     - lint
+  #     - test
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Build Node.js
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
-        with:
-          stage: 'build'
-          node_version: ${{ inputs.node_version }}
-          yarnrc: ${{ vars.YARNRC }}
-          npmrc: ${{ vars.NPMRC }}
-          node_package_manager: ${{ inputs.node_package_manager }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          node_build_env: ${{ inputs.environment }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
-          artifact_path: ${{ inputs.artifact_path || 'build/' }}
+  #     - name: Build Node.js
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') && !inputs.build_disabled }}
+  #       uses: RocketBus/actions/.github/actions/nodejs@v1
+  #       with:
+  #         stage: 'build'
+  #         node_version: ${{ inputs.node_version }}
+  #         yarnrc: ${{ vars.YARNRC }}
+  #         npmrc: ${{ vars.NPMRC }}
+  #         node_package_manager: ${{ inputs.node_package_manager }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #         node_build_env: ${{ inputs.environment }}
+  #         artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+  #         artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+  #         artifact_path: ${{ inputs.artifact_path || 'build/' }}
 
-      - name: Build Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/java@v1
-        with:
-          stage: 'build'
-          jdk_version: ${{ inputs.jdk_version }}
-          maven_settings: ${{ vars.MAVEN_SETTINGS }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
-          artifact_path: ${{ inputs.artifact_path || '**/target/*.jar' }}
+  #     - name: Build Java
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') && !inputs.build_disabled }}
+  #       uses: RocketBus/actions/.github/actions/java@v1
+  #       with:
+  #         stage: 'build'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         maven_settings: ${{ vars.MAVEN_SETTINGS }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #         artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+  #         artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+  #         artifact_path: ${{ inputs.artifact_path || '**/target/*.jar' }}
 
-      - name: Build Gradle
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/gradle@v1
-        with:
-          stage: 'build'
-          jdk_version: ${{ inputs.jdk_version }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
-          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
-          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
-          artifact_path: ${{ inputs.artifact_path || '**/build/libs/*.jar' }}
+  #     - name: Build Gradle
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle') && !inputs.build_disabled }}
+  #       uses: RocketBus/actions/.github/actions/gradle@v1
+  #       with:
+  #         stage: 'build'
+  #         jdk_version: ${{ inputs.jdk_version }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+  #         codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+  #         codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+  #         artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+  #         artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+  #         artifact_path: ${{ inputs.artifact_path || '**/build/libs/*.jar' }}
 
-      - name: Build Docker
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') && !inputs.docker_disabled }}
-        id: build_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
-        with:
-          stage: 'build'
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          dockerfile: ${{ inputs.dockerfile }}
-          docker_build_context: ${{ inputs.docker_build_context }}
-          docker_build_target: ${{ inputs.docker_build_target }}
-          docker_build_args: ${{ inputs.docker_build_args }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+  #     - name: Build Docker
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') && !inputs.docker_disabled }}
+  #       id: build_docker
+  #       uses: RocketBus/actions/.github/actions/docker@v1
+  #       with:
+  #         stage: 'build'
+  #         ecr_region: ${{ vars.ECR_REGION }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         image_name: ${{ env.DOCKER_IMAGE_NAME }}
+  #         image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+  #         dockerfile: ${{ inputs.dockerfile }}
+  #         docker_build_context: ${{ inputs.docker_build_context }}
+  #         docker_build_target: ${{ inputs.docker_build_target }}
+  #         docker_build_args: ${{ inputs.docker_build_args }}
+  #         artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+  #         artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
-      - name: Build Chart
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
-        uses: RocketBus/actions/.github/actions/chart@acme-4751
-        with:
-          stage: 'build'
-          helm_version: ${{ vars.HELM_VERSION }}
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          chart_path: ${{ env.CHART_PATH }}
-          chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
-          app_version: ${{ steps.build_docker.outputs.image_tag }}
+  #     - name: Build Chart
+  #       if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
+  #       uses: RocketBus/actions/.github/actions/chart@acme-4751
+  #       with:
+  #         stage: 'build'
+  #         helm_version: ${{ vars.HELM_VERSION }}
+  #         ecr_region: ${{ vars.ECR_REGION }}
+  #         actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+  #         chart_path: ${{ env.CHART_PATH }}
+  #         chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
+  #         app_version: ${{ steps.build_docker.outputs.image_tag }}
 
-      - name: Create SBOM File
-        uses: anchore/sbom-action@v0
-        with:
-          syft-version: v0.87.1
-          path: '.'
-          format: spdx-json
-          output-file: sbom.spdx.json
-          artifact-name: sbom.spdx.json
-          upload-artifact-retention: 1d
+  #     - name: Create SBOM File
+  #       uses: anchore/sbom-action@v0
+  #       with:
+  #         syft-version: v0.87.1
+  #         path: '.'
+  #         format: spdx-json
+  #         output-file: sbom.spdx.json
+  #         artifact-name: sbom.spdx.json
+  #         upload-artifact-retention: 1d
 
-  sca:
-    name: Software Composition Analysis
-    if: ${{ always() && (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
-    runs-on: actions-runner-set
-    needs: 
-      - preflight
-      - lint
-      - test
-      - build
-    steps:
-      - uses: actions/download-artifact@v3
-        with:
-          name: sbom.spdx.json
+  # sca:
+  #   name: Software Composition Analysis
+  #   if: ${{ always() && (github.event_name == 'pull_request' || github.ref_name == github.event.repository.default_branch) && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+  #   runs-on: actions-runner-set
+  #   needs: 
+  #     - preflight
+  #     - lint
+  #     - test
+  #     - build
+  #   steps:
+  #     - uses: actions/download-artifact@v3
+  #       with:
+  #         name: sbom.spdx.json
 
-      - name: Scan SBOM
-        id: scan
-        uses: anchore/scan-action@v3
-        with:
-          sbom: sbom.spdx.json
-          fail-build: ${{ inputs.scan_fail_build }}
-          severity-cutoff: low
-          output-format: table
-          only-fixed: true
-          add-cpes-if-none: true
+  #     - name: Scan SBOM
+  #       id: scan
+  #       uses: anchore/scan-action@v3
+  #       with:
+  #         sbom: sbom.spdx.json
+  #         fail-build: ${{ inputs.scan_fail_build }}
+  #         severity-cutoff: low
+  #         output-format: table
+  #         only-fixed: true
+  #         add-cpes-if-none: true
 
   release:
     name: Release
