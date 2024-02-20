@@ -54,7 +54,7 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
           helm_version: ${{ vars.HELM_VERSION }}
@@ -68,7 +68,7 @@ jobs:
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
           helm_version: ${{ vars.HELM_VERSION }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: Deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
           helm_version: ${{ vars.HELM_VERSION }}
@@ -107,7 +107,7 @@ jobs:
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
           helm_version: ${{ vars.HELM_VERSION }}
@@ -193,7 +193,7 @@ jobs:
       - name: Deploy
         id: deploy
         if: ${{ inputs.action == 'Deployment' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: deploy
           helm_version: ${{ vars.HELM_VERSION }}
@@ -208,7 +208,7 @@ jobs:
       - name: Rollback
         id: rollback
         if: ${{ inputs.action == 'Rollback' }}
-        uses: RocketBus/actions/.github/actions/utils/helm@acme-4751
+        uses: RocketBus/actions/.github/actions/utils/helm@v1
         with:
           stage: rollback
           helm_version: ${{ vars.HELM_VERSION }}

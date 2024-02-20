@@ -218,7 +218,7 @@ jobs:
 
       - name: Lint Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
-        uses: RocketBus/actions/.github/actions/chart@acme-4751
+        uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'lint'
           helm_version: ${{ vars.HELM_VERSION }}
@@ -399,7 +399,7 @@ jobs:
 
       - name: Build Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
-        uses: RocketBus/actions/.github/actions/chart@acme-4751
+        uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'build'
           helm_version: ${{ vars.HELM_VERSION }}
@@ -526,7 +526,7 @@ jobs:
 
       - name: Release Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
-        uses: RocketBus/actions/.github/actions/chart@acme-4751
+        uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'release'
           helm_version: ${{ vars.HELM_VERSION }}
