@@ -506,18 +506,18 @@ jobs:
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
-      - name: Release Docker
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
-        id: release_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
-        with:
-          stage: 'release'
-          ecr_region: ${{ vars.ECR_REGION }}
-          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          image_name: ${{ env.DOCKER_IMAGE_NAME }}
-          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
-          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+      # - name: Release Docker
+      #   if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+      #   id: release_docker
+      #   uses: RocketBus/actions/.github/actions/docker@v1
+      #   with:
+      #     stage: 'release'
+      #     ecr_region: ${{ vars.ECR_REGION }}
+      #     actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+      #     image_name: ${{ env.DOCKER_IMAGE_NAME }}
+      #     image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+      #     artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+      #     artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Release Chart
         uses: RocketBus/actions/.github/actions/chart@acme-4751
@@ -529,7 +529,7 @@ jobs:
           environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment }}
           chart_path: ${{ env.CHART_PATH }}
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
-          app_version: ${{ steps.release_docker.outputs.image_tag }}
+          app_version: ${{ needs.preflight.outputs.gitversion_semver }}
 
       - name: Git Push Changes
         shell: bash
