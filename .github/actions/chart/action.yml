@@ -91,22 +91,13 @@ runs:
       shell: bash
       run: |
         temp_dir=$(mktemp -d)
-        cp -r environments ${temp_dir}
-
-
-        echo "${temp_dir}"
-        ls ${temp_dir}
-
-        echo "antes"
-        ls
-        
+        cp -r environments ${temp_dir}        
 
         for environment in environments/*; do
           [ "${environment##*/}" != "${ENVIRONMENT}" ] && rm -rf "$environment"
         done
 
-        echo "depois"
-        ls
+        ls environments
 
         helm package .
 
