@@ -93,10 +93,8 @@ runs:
         temp_dir=$(mktemp -d)
         cp -r environments ${temp_dir}        
 
-        echo ${ENVIRONMENT}
-
         for environment in environments/*; do
-          if [ "${ENVIRONMENT}" == null ]; then
+          if [ "${ENVIRONMENT}" == master ] || [ "${ENVIRONMENT}" == main ]; then
             if [ "${environment##*/}" != "live" ] && [ "${environment##*/}" != "stg" ]; then
               rm -rf "$environment"
             fi
