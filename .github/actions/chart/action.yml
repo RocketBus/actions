@@ -93,9 +93,20 @@ runs:
         temp_dir=$(mktemp -d)
         cp -r . ${temp_dir}
 
-        for dir in environments/*; do
-          [ "${dir##*/}" != "${ENVIRONMENT}" ] && rm -rf "$dir"
+
+        echo "${temp_dir}"
+        ls ${temp_dir}
+
+        echo "antes"
+        ls
+        
+
+        for environment in environments/*; do
+          [ "${environment##*/}" != "${ENVIRONMENT}" ] && rm -rf "$environment"
         done
+
+        echo "depois"
+        ls
 
         helm package .
 
