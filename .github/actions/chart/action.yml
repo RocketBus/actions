@@ -123,3 +123,10 @@ runs:
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
+
+    - name: Install Dependencies
+      working-directory: ${{ inputs.chart_path }}
+      shell: bash
+      run: echo $ENVIRONMENT
+      env:
+        ENVIRONMENT: ${{ inputs.environment }}
