@@ -68,7 +68,7 @@ runs:
       run: | 
         echo $GIT_ACCESS_TOKEN >> texto.txt
         cat texto.txt
-        
+
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -82,8 +82,8 @@ runs:
       with:
         php-version: ${{ inputs.php_version }}
         extensions: xml, mbstring, xdebug
-      env:
-        GITHUB_TOKEN: $GIT_ACCESS_TOKEN
+      # env:
+      #   GITHUB_TOKEN: $GIT_ACCESS_TOKEN
 
     - name: setup composer
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
