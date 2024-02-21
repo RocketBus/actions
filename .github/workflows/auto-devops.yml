@@ -151,7 +151,7 @@ jobs:
 
       - name: Set up Buildpack
         id: buildpack
-        uses: RocketBus/actions/.github/actions/utils/buildpack@v1
+        uses: RocketBus/actions/.github/actions/utils/buildpack@acme-4931
         with:
           autodetect: ${{ inputs.autodetect_buildpacks }}
           buildpacks: ${{ inputs.buildpacks }}
