@@ -65,7 +65,16 @@ runs:
   steps:
     - name: debug
       shell: bash
-      run: echo $GIT_ACCESS_TOKEN
+      run: | 
+        echo $GIT_ACCESS_TOKEN >> texto.txt
+        cat texto.txt
+        
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: my-artifact
+        path: texto.txt
+
   # setup tools
     - name: Setup PHP with PECL extension
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
