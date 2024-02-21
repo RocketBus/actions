@@ -112,10 +112,17 @@ runs:
         YARNRC: ${{ inputs.yarnrc }}
 
   # install
-    - name: install php dependencies
-      if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
+    - name: install php lint/test dependencies
+      if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' }}
       shell: bash
       run: composer install --verbose --prefer-dist --optimize-autoloader --no-interaction
+
+    - name: install php build dependencies
+      if: ${{ inputs.stage == 'build' }}
+      shell: bash
+      run: |
+        [ -d "vendor" ] && rm -rf vendor
+        composer install --verbose --prefer-dist --optimize-autoloader --no-dev --no-interaction
 
     - name: Install Javascript Dependencies
       if: ${{ inputs.stage == 'test' || inputs.stage == 'build' }}
@@ -126,50 +133,21 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-    - name: install dependency with bower
+    - name: Install Dependency With Bower
       if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: node_modules/bower/bin/bower install
 
-    - name: install dependency with gulp
+    - name: Install Dependency With Gulp
       if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: node_modules/gulp/bin/gulp.js build
 
   # lint: code_sniffer
-    - name: debug1
+    - name: Lint PHP
       if: ${{ inputs.stage == 'lint' }}
       shell: bash
-      #continue-on-error: true
-      run: | 
-        ls    
-
-    - name: debug2
-      if: ${{ inputs.stage == 'lint' }}
-      shell: bash
-      #continue-on-error: true
-      run: | 
-        ls ./vendor   
-
-    - name: debug3
-      if: ${{ inputs.stage == 'lint' }}
-      shell: bash
-      #continue-on-error: true
-      run: | 
-        ls ./vendor/bin
-
-    - name: code_sniffer
-      if: ${{ inputs.stage == 'lint' }}
-      shell: bash
-      #continue-on-error: true
       run: ./vendor/bin/phpcs
-
-    - name: Lint Code
-      if: ${{ inputs.stage == 'lint' }}
-      shell: bash
-      run: $NODE_PACKAGE_MANAGER run lint
-      env:
-        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
   # # test: phpunit
   #   - name: phpunit
