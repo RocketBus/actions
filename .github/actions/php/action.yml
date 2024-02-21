@@ -63,6 +63,9 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: debug
+      shell: bash
+      run: echo $GIT_ACCESS_TOKEN
   # setup tools
     - name: Setup PHP with PECL extension
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
@@ -71,7 +74,7 @@ runs:
         php-version: ${{ inputs.php_version }}
         extensions: xml, mbstring, xdebug
       env:
-        GITHUB_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
+        GITHUB_TOKEN: $GIT_ACCESS_TOKEN
 
     - name: setup composer
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
