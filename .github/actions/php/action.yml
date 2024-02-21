@@ -115,7 +115,7 @@ runs:
     - name: install php dependencies
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
       shell: bash
-      run: composer install --verbose --prefer-dist --optimize-autoloader --no-dev --no-interaction
+      run: composer install --verbose --prefer-dist --optimize-autoloader --no-interaction
 
     - name: Install Javascript Dependencies
       if: ${{ inputs.stage == 'test' || inputs.stage == 'build' }}
