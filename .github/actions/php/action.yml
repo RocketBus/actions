@@ -137,6 +137,20 @@ runs:
       run: node_modules/gulp/bin/gulp.js build
 
   # lint: code_sniffer
+    - name: debug1
+      if: ${{ inputs.stage == 'lint' }}
+      shell: bash
+      #continue-on-error: true
+      run: | 
+        ls    
+
+    - name: debug2
+      if: ${{ inputs.stage == 'lint' }}
+      shell: bash
+      #continue-on-error: true
+      run: | 
+        ls ./vendor   
+
     - name: code_sniffer
       if: ${{ inputs.stage == 'lint' }}
       shell: bash
