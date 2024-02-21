@@ -182,7 +182,7 @@ jobs:
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
         env:
-          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}     
+          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}    
 
       - name: Lint Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
