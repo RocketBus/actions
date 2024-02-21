@@ -1,0 +1,253 @@
+name: 'PHP CI'
+description: ''
+
+inputs:
+  stage:
+    description: ''
+    required: false
+  php_version:
+    description: ''
+    required: false
+  node_version:
+    description: ''
+    required: false
+  node_package_manager:
+    description: ''
+    required: false
+  yarnrc:
+    description: ''
+    required: false
+  npmrc:
+    description: ''
+    required: false
+  codeartifact_region:
+    description: ''
+    required: false
+  actions_iam_role:
+    description: ''
+    required: false
+  package_version:
+    description: ''
+    required: false
+  codeartifact_domain:
+    description: ''
+    required: false
+  codeartifact_domain_owner:
+    description: ''
+    required: false
+  node_build_env:
+    description: ''
+    required: false
+  artifact_bucket_region:
+    description: ''
+    required: false
+  artifact_bucket_name:
+    description: ''
+    required: false
+  artifact_path:
+    description: ''
+    required: false
+  report_codesniffer:
+    description: ''
+    required: false
+    default: "phpunit.coverage.xml"
+  report_phpunit:
+    description: ''
+    required: false
+    default: "phpunit.xml"
+  coverage_javascript:
+    description: ''
+    required: false
+    default: "lcov.info"
+
+runs:
+  using: "composite"
+  steps:
+  # setup tools
+    - name: Setup PHP with PECL extension
+      if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: ${{ inputs.php_version }}
+        extensions: xml, mbstring, xdebug
+      env:
+        GITHUB_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
+
+    - name: setup composer
+      if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
+      run: composer self-update 2.2.0
+
+    - name: Set up Node.js (npm)
+      if: ${{ inputs.stage == 'test' || inputs.stage == 'build' }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: npm
+
+    - name: Install Yarn
+      if: ${{ inputs.node_package_manager == 'yarn' && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      shell: bash
+      run: npm install --global yarn
+
+    - name: Set up Node.js (yarn)
+      if: ${{ inputs.node_package_manager == 'yarn' && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: yarn
+
+    - name: Create .npmrc
+      if: ${{ inputs.node_package_manager == 'npm' && inputs.npmrc && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      shell: bash
+      run: echo "$NPMRC" > ~/.npmrc
+      env:
+        NPMRC: ${{ inputs.npmrc }}
+
+    - name: Create .yarnrc.yml
+      if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      shell: bash
+      run: echo "$YARNRC" > ~/.yarnrc.yml
+      env:
+        YARNRC: ${{ inputs.yarnrc }}
+
+  # install
+    - name: install php dependencies
+      if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
+      uses: "ramsey/composer-install@v2"
+      with:
+        custom-cache-suffix: composer
+        composer-options: "--verbose --prefer-dist --optimize-autoloader --no-dev --no-interaction"
+
+    - name: Install Javascript Dependencies
+      if: ${{ inputs.stage == 'test' || inputs.stage == 'build' }}
+      shell: bash
+      run: |
+        if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --ignore-engines --frozen-lockfile; fi
+      env:
+        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
+
+    - name: install dependency with bower
+      if: ${{ inputs.stage == 'build' }}
+      run: node_modules/bower/bin/bower install
+
+    - name: install dependency with gulp
+      if: ${{ inputs.stage == 'build' }}
+      run: node_modules/gulp/bin/gulp.js build
+
+  # lint: code_sniffer
+    - name: code_sniffer
+      if: ${{ inputs.stage == 'lint' }}
+      #continue-on-error: true
+      run: ./vendor/bin/phpcs
+
+    - name: Lint Code
+      if: ${{ inputs.stage == 'lint' }}
+      shell: bash
+      run: $NODE_PACKAGE_MANAGER run lint
+      env:
+        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
+
+  # # test: phpunit
+  #   - name: phpunit
+  #     if: ${{ inputs.stage == 'test' }}
+  #     #continue-on-error: true
+  #     run: php vendor/bin/phpunit -c app
+
+  #   - name: archive PHP_CodeSniffer report
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: ${{ inputs.report_codesniffer }}
+  #       path: ./reports/${{ inputs.report_codesniffer }}
+
+  #   - name: archive unit tests report
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: ${{ inputs.report_phpunit }}
+  #       path: ./reports/${{ inputs.report_phpunit }}
+
+  # # test: javascript unit
+  #   - name: execute unit tests
+  #     if: ${{ inputs.stage == 'test' }}
+  #     # continue-on-error: true
+  #     run: yarn test -- --coverage
+
+  #   - name: upload report artfact
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: ${{ inputs.coverage_javascript }}
+  #       path: ./coverage/${{ inputs.coverage_javascript }}
+
+  # # test: sonarqube
+  #   - name: download php code sniffer report
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: ${{ inputs.report_codesniffer }}
+  #       path: ./reports/
+
+  #   - name: download php unit tests report
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: ${{ inputs.report_codesniffer }}
+  #       path: ./reports/
+
+  #   - name: download javascript unit tests report
+  #     if: ${{ inputs.stage == 'test' }}
+  #     uses: actions/download-artifact@v3
+  #     with:
+  #       name: ${{ inputs.coverage_javascript }}
+  #       path: ./coverage/
+
+  #   - name: Set up SonarQube Args
+  #     id: setup_sonar_args
+  #     if: ${{ inputs.stage == 'sonarqube' }}
+  #     shell: bash
+  #     run: |
+  #       if [[ $EVENT_NAME == 'pull_request' ]]; then
+  #         SONAR_ARGS="-Dsonar.pullrequest.key=$PR_NUMBER \
+  #           -Dsonar.pullrequest.branch=$HEAD_REF \
+  #           -Dsonar.pullrequest.base=$BASE_REF \
+  #           -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
+  #       elif [[ $EVENT_NAME == 'push' && $REF_NAME != $DEFAULT_BRANCH ]]; then
+  #         SONAR_ARGS="-Dsonar.branch.name=$REF_NAME"
+  #       fi
+
+  #       echo "args=$SONAR_ARGS" >> $GITHUB_OUTPUT
+  #     env:
+  #       EVENT_NAME: ${{ github.event_name }}
+  #       PR_NUMBER: ${{ github.event.pull_request.number }}
+  #       HEAD_REF: ${{ github.head_ref }}
+  #       BASE_REF: ${{ github.base_ref }}
+  #       REF_NAME: ${{ github.ref_name }}
+  #       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+
+  #   - name: SonarQube Scan
+  #     if: ${{ inputs.stage == 'sonarqube' }}
+  #     uses: sonarsource/sonarqube-scan-action@master
+  #     with:
+  #       args: ${{ steps.setup_sonar_args.outputs.args }}
+
+  #   - name: SonarQube Quality Gate Check
+  #     if: ${{ inputs.stage == 'sonarqube' && github.event_name == 'pull_request' }}
+  #     uses: sonarsource/sonarqube-quality-gate-action@master
+
+  # # release: package
+  #   - name: Cleanup ./vendor/
+  #     if: ${{ inputs.stage == 'release' }}
+  #     run: find ./vendor -name ".git" -type d | xargs rm -rf
+
+  #   - name: Package the app
+  #     if: ${{ inputs.stage == 'release' }}
+  #     run: tar --ignore-failed-read -zcvf app-artifact.tar.gz app features src vendor web
+
+  #   - name: archive artifact
+  #     if: ${{ inputs.stage == 'release' }}
+  #     uses: actions/upload-artifact@v3
+  #     with:
+  #       name: app-artifact
+  #       path: app-artifact.tar.gz

@@ -17,6 +17,10 @@ on:
       buildpacks:
         type: string
         required: false
+      php_version:
+        type: string
+        required: false
+        default: '7.1'
       node_version:
         type: string
         required: false
@@ -164,6 +168,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Lint PHP
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
+        uses: RocketBus/actions/.github/actions/php@acme-4931
+        with:
+          stage: 'lint'
+          php_version: ${{ inputs.php_version }}
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
 
       - name: Lint Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
