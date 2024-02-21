@@ -75,6 +75,7 @@ runs:
 
     - name: setup composer
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
+      shell: bash
       run: composer self-update 2.2.0
 
     - name: Set up Node.js (npm)
@@ -85,26 +86,26 @@ runs:
         cache: npm
 
     - name: Install Yarn
-      if: ${{ inputs.node_package_manager == 'yarn' && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      if: ${{ inputs.node_package_manager == 'yarn' && (inputs.stage == 'test' || inputs.stage == 'build') }}
       shell: bash
       run: npm install --global yarn
 
     - name: Set up Node.js (yarn)
-      if: ${{ inputs.node_package_manager == 'yarn' && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      if: ${{ inputs.node_package_manager == 'yarn' && (inputs.stage == 'test' || inputs.stage == 'build') }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node_version }}
         cache: yarn
 
     - name: Create .npmrc
-      if: ${{ inputs.node_package_manager == 'npm' && inputs.npmrc && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      if: ${{ inputs.node_package_manager == 'npm' && inputs.npmrc && (inputs.stage == 'test' || inputs.stage == 'build') }}
       shell: bash
       run: echo "$NPMRC" > ~/.npmrc
       env:
         NPMRC: ${{ inputs.npmrc }}
 
     - name: Create .yarnrc.yml
-      if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc && (${{ inputs.stage == 'test' || inputs.stage == 'build' }}) }}
+      if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc && (inputs.stage == 'test' || inputs.stage == 'build') }}
       shell: bash
       run: echo "$YARNRC" > ~/.yarnrc.yml
       env:
@@ -129,10 +130,12 @@ runs:
 
     - name: install dependency with bower
       if: ${{ inputs.stage == 'build' }}
+      shell: bash
       run: node_modules/bower/bin/bower install
 
     - name: install dependency with gulp
       if: ${{ inputs.stage == 'build' }}
+      shell: bash
       run: node_modules/gulp/bin/gulp.js build
 
   # lint: code_sniffer
