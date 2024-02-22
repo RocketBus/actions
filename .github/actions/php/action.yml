@@ -50,15 +50,12 @@ inputs:
   report_codesniffer:
     description: ''
     required: false
-    default: "phpunit.coverage.xml"
   report_phpunit:
     description: ''
     required: false
-    default: "phpunit.xml"
   coverage_javascript:
     description: ''
     required: false
-    default: "lcov.info"
 
 runs:
   using: "composite"
@@ -149,93 +146,95 @@ runs:
       shell: bash
       run: ./vendor/bin/phpcs
 
-  # # test: phpunit
-  #   - name: phpunit
-  #     if: ${{ inputs.stage == 'test' }}
-  #     #continue-on-error: true
-  #     run: php vendor/bin/phpunit -c app
+  # test: phpunit
+    - name: phpunit
+      if: ${{ inputs.stage == 'test' }}
+      run: php vendor/bin/phpunit -c app
 
-  #   - name: archive PHP_CodeSniffer report
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: ${{ inputs.report_codesniffer }}
-  #       path: ./reports/${{ inputs.report_codesniffer }}
+    - name: archive PHP_CodeSniffer report
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.report_codesniffer }}
+        path: ./reports/${{ inputs.report_codesniffer }}
 
-  #   - name: archive unit tests report
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: ${{ inputs.report_phpunit }}
-  #       path: ./reports/${{ inputs.report_phpunit }}
+    - name: archive unit tests report
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.report_phpunit }}
+        path: ./reports/${{ inputs.report_phpunit }}
 
-  # # test: javascript unit
-  #   - name: execute unit tests
-  #     if: ${{ inputs.stage == 'test' }}
-  #     # continue-on-error: true
-  #     run: yarn test -- --coverage
+  # test: javascript unit
+    - name: execute unit tests
+      if: ${{ inputs.stage == 'test' }}
+      run: |
+        [ $NODE_PACKAGE_MANAGER == 'npm' ] && $NODE_PACKAGE_MANAGER run test -- --coverage
+        [ $NODE_PACKAGE_MANAGER == 'yarn' ] && $NODE_PACKAGE_MANAGER test -- --coverage
+      with:
+        NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-  #   - name: upload report artfact
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: ${{ inputs.coverage_javascript }}
-  #       path: ./coverage/${{ inputs.coverage_javascript }}
+    - name: upload report artfact
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.coverage_javascript }}
+        path: ./coverage/${{ inputs.coverage_javascript }}
 
-  # # test: sonarqube
-  #   - name: download php code sniffer report
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/download-artifact@v3
-  #     with:
-  #       name: ${{ inputs.report_codesniffer }}
-  #       path: ./reports/
+  # test: sonarqube
+    - name: download php code sniffer report
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.report_codesniffer }}
+        path: ./reports/
 
-  #   - name: download php unit tests report
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/download-artifact@v3
-  #     with:
-  #       name: ${{ inputs.report_codesniffer }}
-  #       path: ./reports/
+    - name: download php unit tests report
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.report_codesniffer }}
+        path: ./reports/
 
-  #   - name: download javascript unit tests report
-  #     if: ${{ inputs.stage == 'test' }}
-  #     uses: actions/download-artifact@v3
-  #     with:
-  #       name: ${{ inputs.coverage_javascript }}
-  #       path: ./coverage/
+    - name: download javascript unit tests report
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/download-artifact@v3
+      with:
+        name: ${{ inputs.coverage_javascript }}
+        path: ./coverage/
 
-  #   - name: Set up SonarQube Args
-  #     id: setup_sonar_args
-  #     if: ${{ inputs.stage == 'sonarqube' }}
-  #     shell: bash
-  #     run: |
-  #       if [[ $EVENT_NAME == 'pull_request' ]]; then
-  #         SONAR_ARGS="-Dsonar.pullrequest.key=$PR_NUMBER \
-  #           -Dsonar.pullrequest.branch=$HEAD_REF \
-  #           -Dsonar.pullrequest.base=$BASE_REF \
-  #           -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
-  #       elif [[ $EVENT_NAME == 'push' && $REF_NAME != $DEFAULT_BRANCH ]]; then
-  #         SONAR_ARGS="-Dsonar.branch.name=$REF_NAME"
-  #       fi
+    - name: Set up SonarQube Args
+      id: setup_sonar_args
+      if: ${{ inputs.stage == 'sonarqube' }}
+      shell: bash
+      run: |
+        if [[ $EVENT_NAME == 'pull_request' ]]; then
+          SONAR_ARGS="-Dsonar.pullrequest.key=$PR_NUMBER \
+            -Dsonar.pullrequest.branch=$HEAD_REF \
+            -Dsonar.pullrequest.base=$BASE_REF \
+            -Dsonar.pullrequest.github.repository=$GITHUB_REPOSITORY"
+        elif [[ $EVENT_NAME == 'push' && $REF_NAME != $DEFAULT_BRANCH ]]; then
+          SONAR_ARGS="-Dsonar.branch.name=$REF_NAME"
+        fi
 
-  #       echo "args=$SONAR_ARGS" >> $GITHUB_OUTPUT
-  #     env:
-  #       EVENT_NAME: ${{ github.event_name }}
-  #       PR_NUMBER: ${{ github.event.pull_request.number }}
-  #       HEAD_REF: ${{ github.head_ref }}
-  #       BASE_REF: ${{ github.base_ref }}
-  #       REF_NAME: ${{ github.ref_name }}
-  #       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        echo "args=$SONAR_ARGS" >> $GITHUB_OUTPUT
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_REF: ${{ github.head_ref }}
+        BASE_REF: ${{ github.base_ref }}
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
 
-  #   - name: SonarQube Scan
-  #     if: ${{ inputs.stage == 'sonarqube' }}
-  #     uses: sonarsource/sonarqube-scan-action@master
-  #     with:
-  #       args: ${{ steps.setup_sonar_args.outputs.args }}
+    - name: SonarQube Scan
+      if: ${{ inputs.stage == 'sonarqube' }}
+      uses: sonarsource/sonarqube-scan-action@master
+      with:
+        args: ${{ steps.setup_sonar_args.outputs.args }}
 
-  #   - name: SonarQube Quality Gate Check
-  #     if: ${{ inputs.stage == 'sonarqube' && github.event_name == 'pull_request' }}
-  #     uses: sonarsource/sonarqube-quality-gate-action@master
+    - name: SonarQube Quality Gate Check
+      if: ${{ inputs.stage == 'sonarqube' && github.event_name == 'pull_request' }}
+      uses: sonarsource/sonarqube-quality-gate-action@master
 
   # # release: package
   #   - name: Cleanup ./vendor/
