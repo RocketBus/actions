@@ -112,7 +112,7 @@ runs:
       if: ${{ inputs.stage == 'test' }}
       uses: actions/setup-python@v5
       with:
-        python-version: 2
+        python-version: 2.7
 
   # install
     - name: install php lint/test dependencies
