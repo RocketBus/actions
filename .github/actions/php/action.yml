@@ -149,6 +149,7 @@ runs:
   # test: phpunit
     - name: phpunit
       if: ${{ inputs.stage == 'test' }}
+      shell: bash
       run: php vendor/bin/phpunit -c app
 
     - name: archive PHP_CodeSniffer report
@@ -168,10 +169,11 @@ runs:
   # test: javascript unit
     - name: execute unit tests
       if: ${{ inputs.stage == 'test' }}
+      shell: bash
       run: |
         [ $NODE_PACKAGE_MANAGER == 'npm' ] && $NODE_PACKAGE_MANAGER run test -- --coverage
         [ $NODE_PACKAGE_MANAGER == 'yarn' ] && $NODE_PACKAGE_MANAGER test -- --coverage
-      with:
+      env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
     - name: upload report artfact
