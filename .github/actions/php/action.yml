@@ -5,6 +5,9 @@ inputs:
   stage:
     description: ''
     required: false
+  python_version:
+    description: ''
+    required: false
   php_version:
     description: ''
     required: false
@@ -108,12 +111,9 @@ runs:
       env:
         YARNRC: ${{ inputs.yarnrc }}
 
-    - name: Set up Python
-      if: ${{ inputs.stage == 'test' }}
-      uses: actions/setup-python@v5
+    - uses: LizardByte/setup-python-action@master
       with:
-        python-version: 2.7
-        cache: 'python'
+        python-version: ${{ inputs.python_version }}
 
   # install
     - name: install php lint/test dependencies
