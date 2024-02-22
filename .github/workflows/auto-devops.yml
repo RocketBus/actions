@@ -20,7 +20,7 @@ on:
       php_version:
         type: string
         required: false
-        default: '7.1'
+        default: '7.2'
       report_codesniffer:
         type: string
         required: false
