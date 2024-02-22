@@ -108,6 +108,12 @@ runs:
       env:
         YARNRC: ${{ inputs.yarnrc }}
 
+    - name: Set up Python
+      if: ${{ inputs.stage == 'test' }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: 2
+
   # install
     - name: install php lint/test dependencies
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' }}
