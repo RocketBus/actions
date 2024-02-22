@@ -100,15 +100,16 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-        ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
-        ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
-        HELM_ARGS="--timeout 10m --wait --cleanup-on-fail --history-max 3"
-        
         if [ -d "${CHART_NAME}/environments/${ENVIRONMENT}" ]; then
             ENVIRONMENT_PATH="${CHART_NAME}/environments/${ENVIRONMENT}"
+            [ "${ENVIRONMENT}" == "stg" ] && rm -rf ${CHART_NAME}/environments/live
+            [ "${ENVIRONMENT}" == "live" ] && rm -rf ${CHART_NAME}/environments/stg
         else
             ENVIRONMENT_PATH="${ENVIRONMENTS_PATH}/${ENVIRONMENT}"
         fi
+        ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
+        ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
+        HELM_ARGS="--timeout 10m --wait --cleanup-on-fail --history-max 3"       
 
         if [[ -f ${ENVIRONMENT_PATH}/helmspec.yaml ]]; then
           RELEASE_NAME=$(yq '.releaseName // ""' ${ENVIRONMENT_PATH}/helmspec.yaml)
