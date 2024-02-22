@@ -113,6 +113,7 @@ runs:
       uses: actions/setup-python@v5
       with:
         python-version: 2.7
+        cache: 'python'
 
   # install
     - name: install php lint/test dependencies
