@@ -25,7 +25,11 @@ runs:
         if [[ $AUTODETECT_BUILDPACKS == 'true' ]]; then
           DETECTED_BUILDPACKS='[]'
 
-          if [[ -f package.json ]]; then
+          if [[ -f composer.json ]]; then
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["php"]')
+          fi
+
+          if [[ -f package.json && !(-f composer.json) ]]; then
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["nodejs"]')
           fi
 

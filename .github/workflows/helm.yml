@@ -40,7 +40,7 @@ jobs:
 
   development:
     name: Development
-    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && inputs.environment == 'development')) }}
+    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && inputs.environment == 'development')) }}
     environment:
       name: ${{ github.event.workflow_run.head_branch || github.ref_name }}
     runs-on: actions-runner-set
