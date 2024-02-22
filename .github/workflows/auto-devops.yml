@@ -151,7 +151,7 @@ jobs:
 
       - name: Set up Buildpack
         id: buildpack
-        uses: RocketBus/actions/.github/actions/utils/buildpack@acme-4931
+        uses: RocketBus/actions/.github/actions/utils/buildpack@v1
         with:
           autodetect: ${{ inputs.autodetect_buildpacks }}
           buildpacks: ${{ inputs.buildpacks }}
@@ -171,7 +171,7 @@ jobs:
 
       - name: Lint PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: RocketBus/actions/.github/actions/php@acme-4931
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'lint'
           php_version: ${{ inputs.php_version }}
