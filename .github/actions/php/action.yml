@@ -79,7 +79,6 @@ runs:
       run: |
         yq -i '.parameters.version = env(PACKAGE_VERSION)' app/config/parameters.yml
         jq --arg PACKAGE_VERSION "$PACKAGE_VERSION" '.version = $PACKAGE_VERSION' package.json > package_temporario.json && mv package_temporario.json package.json
-        jq --arg PACKAGE_VERSION "$PACKAGE_VERSION" '.version = $PACKAGE_VERSION' composer.json > composer_temporario.json && mv composer_temporario.json composer.json
       env:
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
