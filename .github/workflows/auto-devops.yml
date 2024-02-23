@@ -185,20 +185,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # - name: Lint PHP
-      #   if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-      #   uses: RocketBus/actions/.github/actions/php@v1
-      #   with:
-      #     stage: 'lint'
-      #     php_version: ${{ inputs.php_version }}
-      #     node_version: ${{ inputs.node_version }}
-      #     yarnrc: ${{ vars.YARNRC }}
-      #     npmrc: ${{ vars.NPMRC }}
-      #     node_package_manager: ${{ inputs.node_package_manager }}
-      #     actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-      #     package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
-      #   env:
-      #     GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}    
+      - name: Lint PHP
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
+        uses: RocketBus/actions/.github/actions/php@v1
+        with:
+          stage: 'lint'
+          php_version: ${{ inputs.php_version }}
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+        env:
+          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}    
 
       - name: Lint Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
@@ -239,17 +239,17 @@ jobs:
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
 
-      # - name: Lint Docker
-      #   if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
-      #   id: build_docker
-      #   uses: RocketBus/actions/.github/actions/docker@v1
-      #   with:
-      #     stage: 'lint'
-      #     ecr_region: ${{ vars.ECR_REGION }}
-      #     actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-      #     image_name: ${{ env.DOCKER_IMAGE_NAME }}
-      #     image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
-      #     dockerfile: ${{ inputs.dockerfile }}
+      - name: Lint Docker
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+        id: build_docker
+        uses: RocketBus/actions/.github/actions/docker@v1
+        with:
+          stage: 'lint'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          image_name: ${{ env.DOCKER_IMAGE_NAME }}
+          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          dockerfile: ${{ inputs.dockerfile }}
 
       - name: Lint Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
@@ -278,7 +278,7 @@ jobs:
 
       - name: Test PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: RocketBus/actions/.github/actions/php@acme-4932
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'test'
           python_version: ${{ inputs.python_version }}
@@ -300,7 +300,7 @@ jobs:
 
       - name: SonarQube PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: RocketBus/actions/.github/actions/php@acme-4932
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'sonarqube'
           python_version: ${{ inputs.python_version }}
