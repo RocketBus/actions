@@ -298,6 +298,28 @@ jobs:
         env:
           GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
 
+      - name: SonarQube PHP
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
+        uses: RocketBus/actions/.github/actions/php@acme-4932
+        with:
+          stage: 'sonarqube'
+          python_version: ${{ inputs.python_version }}
+          php_version: ${{ inputs.php_version }}
+          report_codesniffer: ${{ inputs.report_codesniffer }} 
+          report_phpunit: ${{ inputs.report_phpunit }} 
+          coverage_javascript: ${{ inputs.coverage_javascript }} 
+          node_version: ${{ inputs.node_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+        env:
+          GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
+
       - name: Test Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
         uses: RocketBus/actions/.github/actions/nodejs@v1

@@ -192,21 +192,21 @@ runs:
 
   # test: sonarqube
     - name: download php code sniffer report
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.report_codesniffer }}
         path: ./reports/
 
     - name: download php unit tests report
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.report_codesniffer }}
         path: ./reports/
 
     - name: download javascript unit tests report
-      if: ${{ inputs.stage == 'test' }}
+      if: ${{ inputs.stage == 'sonarqube' }}
       uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.coverage_javascript }}
