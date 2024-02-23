@@ -77,7 +77,7 @@ runs:
     - name: Release Prepare
       shell: bash
       run: |
-        yq -i -y '.parameters.version = env(ARTIFACT_VERSION)' app/config/parameters.yml
+        yq -i '.parameters.version = env(ARTIFACT_VERSION)' app/config/parameters.yml
         jq '.version = env(ARTIFACT_VERSION)' package.json > package_temporario.json && mv package_temporario.json package.json
         jq '.version = env(ARTIFACT_VERSION)' composer.json > composer_temporario.json && mv composer_temporario.json composer.json
       env:
