@@ -196,7 +196,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
         env:
           GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}    
 
@@ -291,7 +291,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -313,7 +313,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -410,9 +410,28 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Build PHP
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') && !inputs.build_disabled }}
+        uses: RocketBus/actions/.github/actions/php@v1
+        with:
+          stage: 'build'
+          node_version: ${{ inputs.node_version }}
+          php_version: ${{ inputs.php_version }}
+          yarnrc: ${{ vars.YARNRC }}
+          npmrc: ${{ vars.NPMRC }}
+          node_package_manager: ${{ inputs.node_package_manager }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          artifact_path: ${{ inputs.artifact_path || 'package/' }}
+
       - name: Build Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
+        uses: RocketBus/actions/.github/actions/nodejs@acme-4933
         with:
           stage: 'build'
           node_version: ${{ inputs.node_version }}

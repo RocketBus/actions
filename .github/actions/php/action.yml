@@ -63,6 +63,26 @@ inputs:
 runs:
   using: "composite"
   steps:
+  # prepare
+    - name: Project Metadata
+      id: metadata
+      shell: bash
+      run: |
+        PACKAGE_NAME=$(jq '.name' composer.json)
+        echo artifact_name=$PACKAGE_NAME-$PACKAGE_VERSION >> $GITHUB_OUTPUT
+        echo package_version=$PACKAGE_VERSION >> $GITHUB_OUTPUT
+      env:
+        PACKAGE_VERSION: ${{ inputs.package_version }}
+
+    - name: Release Prepare
+      shell: bash
+      run: |
+        yq -i -y '.parameters.version = env(ARTIFACT_VERSION)' app/config/parameters.yml
+        jq '.version = env(ARTIFACT_VERSION)' package.json > package_temporario.json && mv package_temporario.json package.json
+        jq '.version = env(ARTIFACT_VERSION)' composer.json > composer_temporario.json && mv composer_temporario.json composer.json
+      env:
+        PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
+
   # setup tools
     - name: Setup PHP with PECL extension
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
@@ -125,7 +145,6 @@ runs:
       if: ${{ inputs.stage == 'build' }}
       shell: bash
       run: |
-        [ -d "vendor" ] && rm -rf vendor
         composer install --verbose --prefer-dist --optimize-autoloader --no-dev --no-interaction
 
     - name: Install Javascript Dependencies
@@ -159,19 +178,25 @@ runs:
       shell: bash
       run: php vendor/bin/phpunit -c app
 
-    - name: archive PHP_CodeSniffer report
+    - name: Archive PHP_CodeSniffer Report
       if: ${{ inputs.stage == 'test' }}
-      uses: actions/upload-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
         name: ${{ inputs.report_codesniffer }}
         path: ./reports/${{ inputs.report_codesniffer }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
-    - name: archive unit tests report
+    - name: Archive PHP Unit Report
       if: ${{ inputs.stage == 'test' }}
-      uses: actions/upload-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
         name: ${{ inputs.report_phpunit }}
         path: ./reports/${{ inputs.report_phpunit }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
   # test: javascript unit
     - name: execute unit tests
@@ -183,34 +208,46 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-    - name: upload report artfact
+    - name: Archive Report Code Coverage
       if: ${{ inputs.stage == 'test' }}
-      uses: actions/upload-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
       with:
         name: ${{ inputs.coverage_javascript }}
         path: ./coverage/${{ inputs.coverage_javascript }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
   # test: sonarqube
-    - name: download php code sniffer report
+    - name: Download PHP_CodeSniffer Report
       if: ${{ inputs.stage == 'sonarqube' }}
-      uses: actions/download-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: ${{ inputs.report_codesniffer }}
         path: ./reports/
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
-    - name: download php unit tests report
+    - name: Download PHP Unit Report
       if: ${{ inputs.stage == 'sonarqube' }}
-      uses: actions/download-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: ${{ inputs.report_codesniffer }}
         path: ./reports/
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
-    - name: download javascript unit tests report
+    - name: download Report Code Coverage
       if: ${{ inputs.stage == 'sonarqube' }}
-      uses: actions/download-artifact@v3
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: ${{ inputs.coverage_javascript }}
         path: ./coverage/
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
 
     - name: Set up SonarQube Args
       id: setup_sonar_args
@@ -252,7 +289,7 @@ runs:
 
   #   - name: Package the app
   #     if: ${{ inputs.stage == 'release' }}
-  #     run: tar --ignore-failed-read -zcvf app-artifact.tar.gz app features src vendor web
+  #     run: tar --ignore-failed-read -zcvf app-artifact.tar.gz app features src vendor web 2> error.log
 
   #   - name: archive artifact
   #     if: ${{ inputs.stage == 'release' }}
