@@ -94,7 +94,6 @@ runs:
       if: ${{ inputs.stage == 'lint' || inputs.stage == 'test' || inputs.stage == 'build' }}
       shell: bash
       run: | 
-        composer self-update 2.2.0
         composer config --global github-oauth.github.com $GIT_ACCESS_TOKEN
 
     - name: Set up Node.js (npm)
