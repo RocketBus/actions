@@ -284,18 +284,12 @@ runs:
   # release: package artifact
     - name: Cleanup ./vendor/
       if: ${{ inputs.stage == 'build' }}
+      shell: bash
       run: find ./vendor -name ".git" -type d | xargs rm -rf
 
     - name: Package The Application
       if: ${{ inputs.stage == 'build' }}
-      run: tar --ignore-failed-read -zcvf ${{ inputs.artifact_path }} app features src vendor web 2> error-app-artifact.log
-
-    - name: Upload Error Application Artifact
-      if: ${{ exists('error-app-artifact.log') }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: error-app-artifact
-        path: error-app-artifact.log
+      run: tar --ignore-failed-read -zcvf ${{ inputs.artifact_path }} app features src vendor web
 
     - name: Archive Application Artifact
       if: ${{ inputs.stage == 'build' }}
