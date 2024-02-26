@@ -281,18 +281,28 @@ runs:
       if: ${{ inputs.stage == 'sonarqube' && github.event_name == 'pull_request' }}
       uses: sonarsource/sonarqube-quality-gate-action@master
 
-  # # release: package
-  #   - name: Cleanup ./vendor/
-  #     if: ${{ inputs.stage == 'release' }}
-  #     run: find ./vendor -name ".git" -type d | xargs rm -rf
+  # release: package artifact
+    - name: Cleanup ./vendor/
+      if: ${{ inputs.stage == 'build' }}
+      run: find ./vendor -name ".git" -type d | xargs rm -rf
 
-  #   - name: Package the app
-  #     if: ${{ inputs.stage == 'release' }}
-  #     run: tar --ignore-failed-read -zcvf app-artifact.tar.gz app features src vendor web 2> error.log
+    - name: Package The Application
+      if: ${{ inputs.stage == 'build' }}
+      run: tar --ignore-failed-read -zcvf ${{ inputs.artifact_path }} app features src vendor web 2> error-app-artifact.log
 
-  #   - name: archive artifact
-  #     if: ${{ inputs.stage == 'release' }}
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: app-artifact
-  #       path: app-artifact.tar.gz
+    - name: Upload Error Application Artifact
+      if: ${{ exists('error-app-artifact.log') }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: error-app-artifact
+        path: error-app-artifact.log
+
+    - name: Archive Application Artifact
+      if: ${{ inputs.stage == 'build' }}
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-upload@v1
+      with:
+        name: ${{ steps.metadata.outputs.artifact_name }}
+        paths: ${{ inputs.artifact_path }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}

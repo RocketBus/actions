@@ -427,7 +427,7 @@ jobs:
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
-          artifact_path: ${{ inputs.artifact_path || 'package/' }}
+          artifact_path: ${{ inputs.artifact_path || 'app-artifact.tar.gz' }}
         env:
           GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
 
