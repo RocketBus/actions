@@ -412,7 +412,7 @@ jobs:
 
       - name: Build PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/php@acme-4934
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'build'
           node_version: ${{ inputs.node_version }}
