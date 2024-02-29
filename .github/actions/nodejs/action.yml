@@ -112,9 +112,9 @@ runs:
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
     - name: Set up Python 2
-      uses: LizardByte/setup-python-action@master
+      uses: actions/setup-python@v3
       with:
-        python-version: 2.7
+        python-version: '2.x'
 
     - name: Install Dependencies
       shell: bash
