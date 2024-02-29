@@ -111,6 +111,11 @@ runs:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
+    - name: Set up Python 2
+      uses: LizardByte/setup-python-action@master
+      with:
+        python-version: 2.7
+
     - name: Install Dependencies
       shell: bash
       run: |
