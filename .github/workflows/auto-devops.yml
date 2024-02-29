@@ -158,6 +158,9 @@ jobs:
         env:
           DOCKERFILE: ${{ inputs.dockerfile }}
           CHART_PATH: ${{ inputs.chart_path }}
+
+      - name: debug buildpack
+        run: echo ${{ steps.buildpack.outputs.buildpacks }}
     
   lint:
     name: Lint
