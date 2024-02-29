@@ -29,7 +29,7 @@ runs:
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["php"]')
           fi
 
-          if [[ -f package.json && !(-f composer.json) ]]; then
+          if [[ -f package.json ]]; then
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["nodejs"]')
           fi
 
