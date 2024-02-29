@@ -85,7 +85,7 @@ runs:
         endpoint: builders
 
     - name: Prepare Workdir
-      if: inputs.download_release_artifact != 'false'
+      if: inputs.download_release_artifact == 'true'
       id: prepare_workdir
       shell: bash
       run: |
@@ -99,19 +99,19 @@ runs:
 
         echo "workdir=$WORKDIR" >> $GITHUB_OUTPUT
       env:
-        DOWNLOAD_RELEASE_ARTIFACT: inputs.download_release_artifact != 'false'
+        DOWNLOAD_RELEASE_ARTIFACT: inputs.download_release_artifact
         DOCKER_BUILD_CONTEXT: ${{ inputs.docker_build_context }}
         DOCKERFILE: ${{ inputs.dockerfile }}
 
     - name: debug 
-      if: inputs.download_release_artifact != 'false'
+      if: inputs.download_release_artifact == 'true'
       shell: bash
       run: | 
         ls ${{ steps.prepare_workdir.outputs.workdir }}
         echo "fim debug"
 
     - name: Download Release Artifact      
-      if: inputs.download_release_artifact != 'false'
+      if: inputs.download_release_artifact == 'true'
       uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
       with:
         name: ${{ inputs.release_artifact || fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
@@ -121,14 +121,14 @@ runs:
         path: ${{ steps.prepare_workdir.outputs.workdir }}
 
     - name: debug 
-      if: inputs.download_release_artifact != 'false'
+      if: inputs.download_release_artifact == 'true'
       shell: bash
       run: | 
         ls ${{ steps.prepare_workdir.outputs.workdir }}
         echo "fim debug"
 
     - name: unzip tar.gz artifacts
-      if: inputs.download_release_artifact != 'false'
+      if: inputs.download_release_artifact == 'true'
       working-directory: ${{ steps.prepare_workdir.outputs.workdir }}
       shell: bash
       run: |
