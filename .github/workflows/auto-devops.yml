@@ -176,7 +176,7 @@ jobs:
           stage: 'lint'
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
         env:
           GIT_ACCESS_TOKEN: ${{ secrets.GIT_ACCESS_TOKEN }}
 
@@ -263,7 +263,7 @@ jobs:
           stage: 'test'
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -385,7 +385,7 @@ jobs:
           stage: 'build'
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
