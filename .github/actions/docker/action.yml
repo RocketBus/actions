@@ -37,6 +37,12 @@ inputs:
   artifact_bucket_name:
     description: ''
     required: true
+  download_release_artifact:
+    description: ''
+    required: false
+  release_artifact:
+    description: ''
+    required: false
 
 outputs:
   image_tag:
@@ -78,11 +84,57 @@ runs:
       with:
         endpoint: builders
 
+    - name: Prepare Workdir
+      if: ${{ !inputs.download_release_artifact }}
+      id: prepare_workdir
+      shell: bash
+      run: |
+        temp_dir=$(mktemp -d)
+        WORKDIR=$temp_dir
+        mkdir -p "${WORKDIR}/${DOCKER_BUILD_CONTEXT}"
+        cp "${DOCKER_BUILD_CONTEXT}/${DOCKERFILE}" "${WORKDIR}/${DOCKER_BUILD_CONTEXT}/"
+        
+        ls $WORKDIR
+        echo "fim Prepare Workdir"
+
+        echo "workdir=$WORKDIR" >> $GITHUB_OUTPUT
+      env:
+        DOWNLOAD_RELEASE_ARTIFACT: ${{ inputs.download_release_artifact }}
+        DOCKER_BUILD_CONTEXT: ${{ inputs.docker_build_context }}
+        DOCKERFILE: ${{ inputs.dockerfile }}
+
+    - name: debug 
+      if: ${{ !inputs.download_release_artifact }}
+      shell: bash
+      run: | 
+        ls ${{ steps.prepare_workdir.outputs.workdir }}
+        echo "fim debug"
+
+    - name: Download Release Artifact      
+      if: ${{ !inputs.download_release_artifact }}
+      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
+      with:
+        name: ${{ inputs.release_artifact || fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+        bucket_region: ${{ inputs.artifact_bucket_region }}
+        bucket_name: ${{ inputs.artifact_bucket_name }}
+        actions_iam_role: ${{ inputs.actions_iam_role }}
+        path: ${{ steps.prepare_workdir.outputs.workdir }}
+
+    - name: unzip tar.gz artifacts
+      if: ${{ !inputs.download_release_artifact }}
+      working-directory: ${{ steps.prepare_workdir.outputs.workdir }}
+      shell: bash
+      run: |
+        for file in $(find . -type f -name '*.tar.gz'); do
+          tar -xzf "$file"
+          rm -f "$file"
+        done
+
     - name: Lint
       if: ${{ inputs.stage == 'lint' }}
       uses: hadolint/hadolint-action@v3.1.0
       with:
-        dockerfile: ${{ inputs.dockerfile }}
+        dockerfile: ${{ inputs.dockerfile }}    
 
     - name: Build Image
       if: ${{ inputs.stage == 'build' }}
@@ -90,7 +142,7 @@ runs:
       with:
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        context: ${{ inputs.docker_build_context }}
+        context: ${{ steps.prepare_workdir.outputs.workdir || inputs.docker_build_context }}
         file: ${{ inputs.dockerfile }}
         target: ${{ inputs.docker_build_target }}
         build-args: ${{ inputs.docker_build_args }}

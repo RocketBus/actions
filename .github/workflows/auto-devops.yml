@@ -100,6 +100,12 @@ on:
         type: boolean
         required: false
         default: false
+      download_release_artifact:
+        type: string
+        required: false
+      release_artifact:
+        type: string
+        required: false
 
 concurrency:
   group: ${{ format('{0}-{1}{2}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment)) }}
@@ -167,7 +173,7 @@ jobs:
 
       - name: Set up Buildpack
         id: buildpack
-        uses: RocketBus/actions/.github/actions/utils/buildpack@v1
+        uses: RocketBus/actions/.github/actions/utils/buildpack@acme-4936
         with:
           autodetect: ${{ inputs.autodetect_buildpacks }}
           buildpacks: ${{ inputs.buildpacks }}
@@ -242,7 +248,7 @@ jobs:
       - name: Lint Docker
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
         id: build_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
+        uses: RocketBus/actions/.github/actions/docker@acme-4936
         with:
           stage: 'lint'
           ecr_region: ${{ vars.ECR_REGION }}
@@ -421,7 +427,7 @@ jobs:
           npmrc: ${{ vars.NPMRC }}
           node_package_manager: ${{ inputs.node_package_manager }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          package_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          package_version: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
@@ -483,7 +489,7 @@ jobs:
       - name: Build Docker
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') && !inputs.docker_disabled }}
         id: build_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
+        uses: RocketBus/actions/.github/actions/docker@acme-4936
         with:
           stage: 'build'
           ecr_region: ${{ vars.ECR_REGION }}
@@ -614,7 +620,7 @@ jobs:
       - name: Release Docker
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
         id: release_docker
-        uses: RocketBus/actions/.github/actions/docker@v1
+        uses: RocketBus/actions/.github/actions/docker@acme-4936
         with:
           stage: 'release'
           ecr_region: ${{ vars.ECR_REGION }}
@@ -623,6 +629,8 @@ jobs:
           image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          download_release_artifact: ${{ inputs.download_release_artifact }}
+          release_artifact: ${{ inputs.release_artifact }}
 
       - name: Release Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
