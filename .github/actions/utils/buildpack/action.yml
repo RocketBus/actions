@@ -49,10 +49,14 @@ runs:
             DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["chart"]')
           fi
         else
-          BUILDPACKS=$(echo $BUILDPACKS jq -c -r -e 'split(" ") | .')
+          DETECTED_BUILDPACKS='[]'
+          BUILDPACKS_LIST=$(echo $BUILDPACKS | tr ' ' '\n')
+          for item in $BUILDPACKS_LIST; do
+            DETECTED_BUILDPACKS=$(echo $DETECTED_BUILDPACKS | jq -r -c '. + ["'$item'"]')
+          done
         fi
 
-        echo buildpacks=${BUILDPACKS:-$DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT
+        echo buildpacks=${DETECTED_BUILDPACKS} >> $GITHUB_OUTPUT
       env:
         AUTODETECT_BUILDPACKS: ${{ inputs.autodetect }}
         BUILDPACKS: ${{ inputs.buildpacks }}
