@@ -512,7 +512,6 @@ jobs:
       - name: Create SBOM File
         uses: anchore/sbom-action@v0
         with:
-          syft-version: v0.87.1
           path: '.'
           format: spdx-json
           output-file: sbom.spdx.json
