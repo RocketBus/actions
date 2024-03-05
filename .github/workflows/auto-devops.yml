@@ -17,10 +17,6 @@ on:
       buildpacks:
         type: string
         required: false
-      composer_version:
-        type: string
-        required: false
-        default: '2.2'
       php_version:
         type: string
         required: false
@@ -178,7 +174,6 @@ jobs:
         uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
         with:
           stage: 'lint'
-          composer_version: ${{ inputs.composer_version }}
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
@@ -266,7 +261,6 @@ jobs:
         uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
         with:
           stage: 'test'
-          composer_version: ${{ inputs.composer_version }}
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
@@ -389,7 +383,6 @@ jobs:
         uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
         with:
           stage: 'build'
-          composer_version: ${{ inputs.composer_version }}
           php_version: ${{ inputs.php_version }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           package_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}

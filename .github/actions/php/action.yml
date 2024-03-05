@@ -54,26 +54,36 @@ runs:
       shell: bash
       run: |
         jq --arg PACKAGE_VERSION $PACKAGE_VERSION '.version = $PACKAGE_VERSION' composer.json > composer.json.tmp
-        mv composer.json.tmp composer.json 
+        mv composer.json.tmp composer.json
       env:
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
   # setup tools
-    - name: Cache Composer dependencies
-      uses: actions/cache@v3
+    - name: Set up PHP
+      uses: shivammathur/setup-php@v2
       with:
-        path: /tmp/composer-cache
-        key: ${{ runner.os }}-${{ hashFiles('**/composer.lock') }}
+        php-version: ${{ inputs.php_version }}
 
-    - name: Install dependencies
-      uses: php-actions/composer@v6
-      env:
-        COMPOSER_AUTH: '{"github-oauth": {"github.com": "${{ env.GIT_ACCESS_TOKEN }}"}}'
+    - name: Set up Composer
+      shell: bash
+      run: | 
+        composer self-update 2.2.0
+        composer config --global github-oauth.github.com $GIT_ACCESS_TOKEN
+
+    - name: Get composer cache directory
+      id: composer-cache
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
       with:
-        version: ${{ inputs.composer_version }}
-        php_version: ${{ inputs.php_version }}
-        php_extensions: xml mbstring xdebug
-        args: "--optimize-autoloader --ignore-platform-reqs"
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: ${{ runner.os }}-composer-
+
+    - name: Install Dependencies
+      shell: bash
+      run: composer install --no-interaction --no-progress --optimize-autoloader --ignore-platform-reqs
 
   # lint: code_sniffer
     - name: Lint Code
