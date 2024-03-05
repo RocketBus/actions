@@ -115,7 +115,7 @@ runs:
       shell: bash
       run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
-        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile; fi
+        if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile --ignore-engines; fi
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
