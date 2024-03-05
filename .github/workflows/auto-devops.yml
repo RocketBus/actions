@@ -151,7 +151,7 @@ jobs:
 
       - name: Set up Buildpack
         id: buildpack
-        uses: RocketBus/actions/.github/actions/utils/buildpack@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/utils/buildpack@v1
         with:
           autodetect: ${{ inputs.autodetect_buildpacks }}
           buildpacks: ${{ inputs.buildpacks }}
@@ -171,7 +171,7 @@ jobs:
 
       - name: Lint PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'lint'
           php_version: ${{ inputs.php_version }}
@@ -182,7 +182,7 @@ jobs:
 
       - name: Lint Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'lint'
           node_version: ${{ inputs.node_version }}
@@ -258,7 +258,7 @@ jobs:
 
       - name: Test PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'test'
           php_version: ${{ inputs.php_version }}
@@ -272,7 +272,7 @@ jobs:
 
       - name: Test Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'test'
           node_version: ${{ inputs.node_version }}
@@ -380,7 +380,7 @@ jobs:
 
       - name: Build PHP
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/php@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/php@v1
         with:
           stage: 'build'
           php_version: ${{ inputs.php_version }}
@@ -397,7 +397,7 @@ jobs:
 
       - name: Build Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') && !inputs.build_disabled }}
-        uses: RocketBus/actions/.github/actions/nodejs@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'build'
           node_version: ${{ inputs.node_version }}
@@ -529,7 +529,7 @@ jobs:
 
       - name: Release Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@feat/multi-docker-image
+        uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'release'
           node_version: ${{ inputs.node_version }}
