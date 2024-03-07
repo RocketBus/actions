@@ -47,7 +47,7 @@ runs:
   using: "composite"
   steps:
     - name: Configure AWS Credentials
-      uses: aws-actions/configure-aws-credentials@v2
+      uses: aws-actions/configure-aws-credentials@v4
       with:
         aws-region: ${{ inputs.ecr_region }}
         role-to-assume: ${{ inputs.actions_iam_role }}
@@ -57,13 +57,13 @@ runs:
 
     - name: Login to Amazon ECR
       id: login_ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      uses: aws-actions/amazon-ecr-login@v2
       with:
         mask-password: true
 
     - name: Docker Metadata
       id: docker_metadata
-      uses: docker/metadata-action@v4
+      uses: aws-actions/amazon-ecr-login@v5
       with:
         images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name }}
         tags: |
@@ -74,7 +74,7 @@ runs:
       run: docker context ls -q | grep -E '^(builders)$' || docker context create builders
 
     - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v2
+      uses: docker/setup-buildx-action@v3
       with:
         endpoint: builders
 
