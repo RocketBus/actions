@@ -311,7 +311,7 @@ jobs:
 
       - name: Set up SonarQube Args
         id: setup_sonar_args
-        if: ${{ ! (contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') || contains(fromJSON(needs.preflight.outputs.buildpacks), 'gradle')) }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') || contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
         shell: bash
         run: |
           if [[ $EVENT_NAME == 'pull_request' ]]; then
