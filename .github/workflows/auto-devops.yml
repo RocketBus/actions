@@ -509,7 +509,7 @@ jobs:
 
   release:
     name: Release
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && needs.build.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.sca.result == 'success' || needs.sca.result == 'skipped') && github.event_name == 'push' }}
+    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && needs.build.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && (needs.sca.result == 'success' || needs.sca.result == 'skipped') }}
     runs-on: actions-runner-set
     needs:
       - preflight
@@ -523,7 +523,8 @@ jobs:
         with:
           token: ${{ secrets.GIT_ACCESS_TOKEN }}
 
-      - name: Sync Repo 
+      - name: Sync Repo
+        if: ${{ github.ref_name == github.event.repository.default_branch && !inputs.git_release_disabled }} 
         shell: bash
         run: git pull
 

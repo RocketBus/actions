@@ -49,7 +49,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Node.js (npm)
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         cache: npm
@@ -61,7 +61,7 @@ runs:
 
     - name: Set up Node.js (yarn)
       if: ${{ inputs.node_package_manager == 'yarn' }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         cache: yarn
