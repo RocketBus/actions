@@ -63,7 +63,7 @@ runs:
     - name: Install Dependencies
       working-directory: ${{ inputs.chart_path }}
       shell: bash
-      run: helm dependency update
+      run: helm dependency build
 
     - name: Release Prepare
       working-directory: ${{ inputs.chart_path }}
