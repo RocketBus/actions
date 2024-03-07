@@ -595,7 +595,7 @@ jobs:
           helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment }}
+          environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment || '' }}
           chart_path: ${{ env.CHART_PATH }}
           chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
           app_version: ${{ steps.release_docker.outputs.image_tag }}
