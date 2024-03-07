@@ -63,7 +63,7 @@ runs:
 
     - name: Docker Metadata
       id: docker_metadata
-      uses: aws-actions/amazon-ecr-login@v5
+      uses: aws-actions/amazon-ecr-login@v2
       with:
         images: ${{ steps.login_ecr.outputs.registry }}/${{ inputs.image_name }}
         tags: |
