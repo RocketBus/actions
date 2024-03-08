@@ -102,9 +102,9 @@ runs:
           TEMP_DIR=$(mktemp -d)
           cp -r environments $TEMP_DIR     
           if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
-            rm -r -v environments/!(${ENVIRONMENT:-stg|live})
+            rm -f -r -v environments/!(${ENVIRONMENT:-stg|live})
           else
-            rm -r -v environments/!(${ENVIRONMENT:-dev})
+            rm -f -r -v environments/!(${ENVIRONMENT:-dev})
           fi
         fi
 
