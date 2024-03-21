@@ -71,6 +71,7 @@ runs:
       run: |
         if [[ -n $APP_VERSION ]]; then
           yq -i '.appVersion = env(APP_VERSION)' Chart.yaml
+          yq -i '.global.image.tag = env(APP_VERSION)' values.yaml
         fi
 
         yq -i '.version = env(CHART_VERSION)' Chart.yaml
