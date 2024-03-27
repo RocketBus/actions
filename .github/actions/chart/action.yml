@@ -88,7 +88,7 @@ runs:
     - name: Release Artifact
       if: ${{ inputs.stage == 'release' }}
       working-directory: ${{ inputs.chart_path }}
-      id: release
+      id: chart_release
       shell: bash
       run: |
         shopt -s globstar extglob
@@ -122,6 +122,32 @@ runs:
         REF_NAME: ${{ github.ref_name }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         REGISTRY: ${{ steps.login_ecr.outputs.registry }}
+        ENVIRONMENT: ${{ inputs.environment }}
+        CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
+        CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
+
+    - name: Clean up Release
+      if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
+      shell: bash
+      run: |
+        shopt -s globstar extglob
+
+        if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
+          REPOSITORY=helm-charts/stable${ENVIRONMENT:+/$ENVIRONMENT}/$CHART_NAME
+        else
+          REPOSITORY=helm-charts/unstable${ENVIRONMENT:+/$ENVIRONMENT}/$CHART_NAME
+        fi
+
+        aws ecr describe-images \
+          --repository-name $REPOSITORY \
+          --image-ids imageTag=$CHART_VERSION > /dev/null \
+        && \
+        aws ecr batch-delete-image \
+          --repository-name $REPOSITORY \
+          --image-ids imageTag=$CHART_VERSION
+      env:
+        REF_NAME: ${{ github.ref_name }}
+        DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ steps.chart_metadata.outputs.name }}
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}

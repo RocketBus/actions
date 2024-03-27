@@ -616,3 +616,43 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.preflight.outputs.gitversion_semver) }}
+
+      - name: Clean up Java
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+        uses: RocketBus/actions/.github/actions/java@v1
+        with:
+          stage: 'cleanup'
+          jdk_version: ${{ inputs.jdk_version }}
+          maven_settings: ${{ vars.MAVEN_SETTINGS }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          artifact_version: ${{ needs.preflight.outputs.gitversion_majorminorpatch }}
+          codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
+          codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
+          codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+
+      - name: Clean up Docker
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+        uses: RocketBus/actions/.github/actions/docker@v1
+        with:
+          stage: 'cleanup'
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          image_name: ${{ env.DOCKER_IMAGE_NAME }}
+          image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
+          artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+
+      - name: Clean up Chart
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
+        uses: RocketBus/actions/.github/actions/chart@v1
+        with:
+          stage: 'cleanup'
+          helm_version: ${{ vars.HELM_VERSION }}
+          ecr_region: ${{ vars.ECR_REGION }}
+          actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
+          environment: ${{ contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name || github.ref_name == github.event.repository.default_branch && inputs.environment || '' }}
+          chart_path: ${{ env.CHART_PATH }}
+          chart_version: ${{ needs.preflight.outputs.gitversion_semver }}
+          app_version: ${{ steps.release_docker.outputs.image_tag }}

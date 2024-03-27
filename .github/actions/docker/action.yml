@@ -129,5 +129,18 @@ runs:
 
     - name: Release Image
       if: ${{ inputs.stage == 'release' }}
+      id: docker_release
       shell: bash
       run: docker push ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
+
+    - name: Clean up Release
+      if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
+      shell: bash
+      run: |
+        aws ecr describe-images \
+          --repository-name ${{ inputs.image_name }} \
+          --image-ids imageTag=${{ inputs.image_tag }} > /dev/null \
+        && \
+        aws ecr batch-delete-image \
+          --repository-name ${{ inputs.image_name }} \
+          --image-ids imageTag=${{ inputs.image_tag }}
