@@ -100,8 +100,7 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
-         echo "environments/" >> ${CHART_NAME}/.helmignore
-
+        echo "environments/" >> ${CHART_NAME}/.helmignore
         if [ -d "${CHART_NAME}/environments/${ENVIRONMENT}" ]; then
             ENVIRONMENT_PATH="${CHART_NAME}/environments/${ENVIRONMENT}"
             [ "${ENVIRONMENT}" == "stg" ] && rm -rf ${CHART_NAME}/environments/live
