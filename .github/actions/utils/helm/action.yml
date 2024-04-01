@@ -100,6 +100,8 @@ runs:
       if: ${{ inputs.stage == 'deploy' }}
       shell: bash
       run: |
+         echo "environments/" >> ${CHART_NAME}/.helmignore
+
         if [ -d "${CHART_NAME}/environments/${ENVIRONMENT}" ]; then
             ENVIRONMENT_PATH="${CHART_NAME}/environments/${ENVIRONMENT}"
             [ "${ENVIRONMENT}" == "stg" ] && rm -rf ${CHART_NAME}/environments/live
@@ -107,6 +109,7 @@ runs:
         else
             ENVIRONMENT_PATH="${ENVIRONMENTS_PATH}/${ENVIRONMENT}"
         fi
+
         ENVIRONMENT_SECRETS_DIR=${ENVIRONMENT_PATH}/secrets.d
         ENVIRONMENT_VALUES_DIR=${ENVIRONMENT_PATH}/values.d
         HELM_ARGS="--timeout 10m --wait --cleanup-on-fail --history-max 3"       
@@ -148,7 +151,7 @@ runs:
           --install \
           --namespace $RELEASE_NAMESPACE $HELM_ARGS
       env:
-        ENVIRONMENTS_PATH: ${{ format('charts/{0}/environments', inputs.chart_name) }}
+        ENVIRONMENTS_PATH: ${{ format('{0}/environments', inputs.chart_name) }}
         ENVIRONMENT: ${{ inputs.environment }}
         CHART_NAME: ${{ inputs.chart_name }}
 
