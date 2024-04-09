@@ -40,9 +40,9 @@ jobs:
 
   development:
     name: Development
-    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) || inputs.environment == 'development') }}
+    if: ${{ always() && contains(fromJSON('["skipped", "success"]'), needs.preflight.result) && (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) || inputs.environment == 'development') }}
     environment:
-      name: ${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name) || inputs.development }}
+      name: ${{(contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name) || 'development' }}
     runs-on: actions-runner-set
     needs:
       - preflight
@@ -55,11 +55,11 @@ jobs:
           helm_version: ${{ vars.HELM_VERSION }}
           ecr_region: ${{ vars.ECR_REGION }}
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
-          chart_repository: helm-charts/unstable${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) && format('/{0}', github.event.workflow_run.head_branch)) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && format('/{0}', github.ref_name)) }}
+          chart_repository: helm-charts/${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) && format('unstable/{0}', github.event.workflow_run.head_branch)) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && format('unstable/{0}', github.ref_name)) || ((github.event.workflow_run.head_branch == github.event.repository.default_branch || github.ref_name == github.event.repository.default_branch) && 'stable') || 'unstable' }}
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
-          environment: ${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name) || 'dev' }}
+          environment: ${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name) || 'dev' }}
 
       - name: Rollback
         if: ${{ inputs.action == 'Rollback' }}
@@ -70,7 +70,7 @@ jobs:
           chart_name: ${{ inputs.chart_name }}
           chart_version: ${{ inputs.chart_version }}
           env_spec: ${{ vars.ENV_SPEC }}
-          environment: ${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex", "dev"]'), github.ref_name) && github.ref_name) || 'dev' }}
+          environment: ${{ (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.event.workflow_run.head_branch) && github.event.workflow_run.head_branch) || (contains(fromJSON('["cabal", "fallen", "hive", "taken", "vex"]'), github.ref_name) && github.ref_name) || 'dev' }}
 
   staging:
     name: Staging
