@@ -105,7 +105,7 @@ runs:
           if [[ $REF_NAME == $DEFAULT_BRANCH ]]; then
             [[ $ENVIRONMENT == "staging" ]] && rm -f -r -v environments/!(stg)
             [[ $ENVIRONMENT == "live" ]] && rm -f -r -v environments/!(live)
-            [[ -z $ENVIRONMENT ]] && rm -f -r -v environments/!(stg|live)
+            [[ -z $ENVIRONMENT ]] && rm -f -r -v environments/!(dev|stg|live)
           else
             rm -f -r -v environments/!(${ENVIRONMENT:-dev})
           fi
