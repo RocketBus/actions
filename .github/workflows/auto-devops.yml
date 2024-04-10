@@ -618,7 +618,7 @@ jobs:
           tag_name: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.preflight.outputs.gitversion_semver) }}
 
       - name: Clean up Java
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') && (cancelled() || failure()) }}
         uses: RocketBus/actions/.github/actions/java@v1
         with:
           stage: 'cleanup'
@@ -633,7 +633,7 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Clean up Docker
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'docker') && (cancelled() || failure()) }}
         uses: RocketBus/actions/.github/actions/docker@v1
         with:
           stage: 'cleanup'
@@ -645,7 +645,7 @@ jobs:
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
       - name: Clean up Chart
-        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
+        if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') && (cancelled() || failure()) }}
         uses: RocketBus/actions/.github/actions/chart@v1
         with:
           stage: 'cleanup'
