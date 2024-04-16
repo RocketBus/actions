@@ -338,7 +338,7 @@ jobs:
 
       - name: SonarQube Scan
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') || contains(fromJSON(needs.preflight.outputs.buildpacks), 'php') }}
-        uses: sonarsource/sonarqube-scan-action@master
+        uses: sonarsource/sonarqube-scan-action@v1
         with:
           args: ${{ steps.setup_sonar_args.outputs.args }}
 
