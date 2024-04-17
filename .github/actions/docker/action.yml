@@ -134,7 +134,7 @@ runs:
       run: docker push ${{ fromJSON(steps.docker_metadata.outputs.json).tags[0] }}
 
     - name: Clean up Release
-      if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
+      if: ${{ inputs.stage == 'cleanup' }}
       shell: bash
       run: |
         aws ecr describe-images \
