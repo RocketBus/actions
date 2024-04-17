@@ -183,41 +183,43 @@ runs:
       run: |
         MODULES=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.modules -DforceStdout | awk -F '<string>|</string>' '{print $2}')
         if [[ -z $MODULES ]]; then
-          aws codeartifact list-package-versions \
+          HAS_VERSION=$(aws codeartifact list-package-versions \
             --namespace ${{ steps.metadata.outputs.maven_group_id }} \
             --package ${{ steps.metadata.outputs.maven_artifact_id }} \
-            --package-version ${{ steps.metadata.outputs.artifact_version }} \
             --domain ${{ inputs.codeartifact_domain }} \
             --domain-owner ${{ inputs.codeartifact_domain_owner }} \
             --repository central \
-            --format maven > /dev/null \
-          && aws codeartifact delete-package-versions \
-            --namespace ${{ steps.metadata.outputs.maven_group_id }} \
-            --package ${{ steps.metadata.outputs.maven_artifact_id }} \
-            --versions ${{ steps.metadata.outputs.artifact_version }} \
-            --domain ${{ inputs.codeartifact_domain }} \
-            --domain-owner ${{ inputs.codeartifact_domain_owner }} \
-            --repository central \
-            --format maven
-        else
-          for MODULE in $MODULES; do
-            GROUP_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.groupId -DforceStdout -pl $MODULE)
-            ARTIFACT_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -DforceStdout -pl $MODULE)
-            aws codeartifact list-package-versions \
-              --namespace $GROUP_ID \
-              --package $ARTIFACT_ID \
-              --package-version ${{ steps.metadata.outputs.artifact_version }} \
-              --domain ${{ inputs.codeartifact_domain }} \
-              --domain-owner ${{ inputs.codeartifact_domain_owner }} \
-              --repository central \
-              --format maven > /dev/null \
-            && aws codeartifact delete-package-versions \
-              --namespace $GROUP_ID \
-              --package $ARTIFACT_ID \
+            --format maven | jq -r 'any(.versions[]; .version == "${{ steps.metadata.outputs.artifact_version }}")')
+          if [[ $HAS_VERSION == true ]]; then
+            aws codeartifact delete-package-versions \
+              --namespace ${{ steps.metadata.outputs.maven_group_id }} \
+              --package ${{ steps.metadata.outputs.maven_artifact_id }} \
               --versions ${{ steps.metadata.outputs.artifact_version }} \
               --domain ${{ inputs.codeartifact_domain }} \
               --domain-owner ${{ inputs.codeartifact_domain_owner }} \
               --repository central \
               --format maven
+          fi
+        else
+          for MODULE in $MODULES; do
+            GROUP_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.groupId -DforceStdout -pl $MODULE)
+            ARTIFACT_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -DforceStdout -pl $MODULE)
+            HAS_VERSION=$(aws codeartifact list-package-versions \
+              --namespace $GROUP_ID \
+              --package $ARTIFACT_ID \
+              --domain ${{ inputs.codeartifact_domain }} \
+              --domain-owner ${{ inputs.codeartifact_domain_owner }} \
+              --repository central \
+              --format maven | jq -r 'any(.versions[]; .version == "${{ steps.metadata.outputs.artifact_version }}")')
+            if [[ $HAS_VERSION == true ]]; then
+              aws codeartifact delete-package-versions \
+                --namespace $GROUP_ID \
+                --package $ARTIFACT_ID \
+                --versions ${{ steps.metadata.outputs.artifact_version }} \
+                --domain ${{ inputs.codeartifact_domain }} \
+                --domain-owner ${{ inputs.codeartifact_domain_owner }} \
+                --repository central \
+                --format maven
+            fi
           done
         fi
