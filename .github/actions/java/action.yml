@@ -73,10 +73,13 @@ runs:
           ARTIFACT_VERSION=$ARTIFACT_VERSION-SNAPSHOT
         fi
 
+        DEPLOYMENT_REPOSITORY=$(aws codeartifact get-repository-endpoint --domain ${{ inputs.codeartifact_domain }} --repository central --format maven --output text)
+
         echo artifact_name=$ARTIFACT_ID-$ARTIFACT_VERSION >> $GITHUB_OUTPUT
         echo artifact_version=$ARTIFACT_VERSION >> $GITHUB_OUTPUT
         echo maven_group_id=$GROUP_ID >> $GITHUB_OUTPUT
         echo maven_artifact_id=$ARTIFACT_ID >> $GITHUB_OUTPUT
+        echo deployment_repository=$DEPLOYMENT_REPOSITORY >> $GITHUB_OUTPUT
       env:
         REF_NAME: ${{ github.ref_name }}
         DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
@@ -172,7 +175,7 @@ runs:
       if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
       id: java_release
       shell: bash
-      run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true -Dsonar.skip=true
+      run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true -Dsonar.skip=true -DaltDeploymentRepository=clickbus-central::default::${{ steps.metadata.outputs.deployment_repository }}
 
     - name: Clean up Release
       if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
