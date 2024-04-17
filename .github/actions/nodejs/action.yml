@@ -133,7 +133,7 @@ runs:
       run: echo build=$(jq ".scripts | has(\"build\")" package.json) >> $GITHUB_OUTPUT
 
     - name: Build Artifact
-      if: ${{ inputs.stage == 'build' && steps.check_scripts.outputs.build }}
+      if: ${{ inputs.stage == 'build' && steps.check_scripts.outputs.build == 'true' }}
       shell: bash
       run: $NODE_PACKAGE_MANAGER run build
       env:
