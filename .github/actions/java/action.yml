@@ -201,8 +201,8 @@ runs:
             --format maven
         else
           for MODULE in $MODULES; do
-            GROUP_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dproject.groupId -DforceStdout -pl $MODULE)
-            ARTIFACT_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dproject.artifactId -DforceStdout -pl $MODULE)
+            GROUP_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.groupId -DforceStdout -pl $MODULE)
+            ARTIFACT_ID=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.artifactId -DforceStdout -pl $MODULE)
             aws codeartifact list-package-versions \
               --namespace $GROUP_ID \
               --package $ARTIFACT_ID \
