@@ -127,7 +127,7 @@ runs:
         CHART_VERSION: ${{ steps.chart_metadata.outputs.version }}
 
     - name: Clean up Release
-      if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
+      if: ${{ inputs.stage == 'cleanup' }}
       shell: bash
       run: |
         shopt -s globstar extglob
