@@ -178,7 +178,7 @@ runs:
       run: ./mvnw $MAVEN_CLI_OPTS deploy -Dspotless.check.skip=true -Dmaven.test.skip=true -Dsonar.skip=true -DaltDeploymentRepository=clickbus-central::default::${{ steps.metadata.outputs.deployment_repository }}
 
     - name: Clean up Release
-      if: ${{ inputs.stage == 'cleanup' && (cancelled() || failure()) }}
+      if: ${{ inputs.stage == 'cleanup' }}
       shell: bash
       run: |
         MODULES=$(./mvnw -B -e -ntp -q org.apache.maven.plugins:maven-help-plugin:3.4.0:evaluate -Dexpression=project.modules -DforceStdout | awk -F '<string>|</string>' '{print $2}')
