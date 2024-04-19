@@ -158,14 +158,14 @@ runs:
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
-    - name: Download Application Artifact
-      if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
-      uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
-      with:
-        name: ${{ steps.metadata.outputs.artifact_name }}
-        bucket_region: ${{ inputs.artifact_bucket_region }}
-        bucket_name: ${{ inputs.artifact_bucket_name }}
-        actions_iam_role: ${{ inputs.actions_iam_role }}
+    # - name: Download Application Artifact
+    #   if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
+    #   uses: RocketBus/actions/.github/actions/utils/s3-artifact-download@v1
+    #   with:
+    #     name: ${{ steps.metadata.outputs.artifact_name }}
+    #     bucket_region: ${{ inputs.artifact_bucket_region }}
+    #     bucket_name: ${{ inputs.artifact_bucket_name }}
+    #     actions_iam_role: ${{ inputs.actions_iam_role }}
 
     # - name: Release Artifact
     #   if: ${{ inputs.stage == 'release' && github.ref_name == github.event.repository.default_branch }}
