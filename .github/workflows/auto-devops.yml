@@ -620,9 +620,10 @@ jobs:
 
       - name: GitHub Release
         if: ${{ github.ref_name == github.event.repository.default_branch && !inputs.git_release_disabled }}
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ format('{0}{1}', inputs.git_tag_prefix, needs.preflight.outputs.gitversion_semver) }}
+          generate_release_notes: true
 
       - name: Clean up Java
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'java') && (cancelled() || failure()) }}
