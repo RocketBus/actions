@@ -29,6 +29,10 @@ on:
         type: string
         required: false
         default: yarn
+      node_build_env:
+        type: string
+        required: false
+        default: ''
       jdk_version:
         type: string
         required: false
@@ -415,7 +419,7 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          node_build_env: ${{ inputs.environment }}
+          node_build_env: ${{ inputs.node_build_env || inputs.environment }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
           artifact_path: ${{ inputs.artifact_path || 'build/' }}
@@ -549,7 +553,7 @@ jobs:
           codeartifact_domain: ${{ vars.CODEARTIFACT_DOMAIN }}
           codeartifact_domain_owner: ${{ vars.CODEARTIFACT_DOMAIN_OWNER }}
           codeartifact_region: ${{ vars.CODEARTIFACT_REGION }}
-          node_build_env: ${{ inputs.environment }}
+          node_build_env: ${{ inputs.node_build_env || inputs.environment }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
 
