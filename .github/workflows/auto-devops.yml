@@ -3,6 +3,9 @@ name: Auto DevOps
 on:
   workflow_call:
     inputs:
+      job_index:
+        type: string
+        required: false
       environment:
         type: string
         required: false
@@ -90,7 +93,7 @@ on:
         default: false
 
 concurrency:
-  group: ${{ format('{0}-{1}{2}{3}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment), strategy.job-index && format('-{0}', strategy.job-index)) }}
+  group: ${{ format('{0}-{1}{2}{3}', github.workflow, github.ref_name, inputs.environment && format('-{0}', inputs.environment), inputs.job_index && format('-{0}', inputs.job_index)) }}
   cancel-in-progress: false
 
 permissions:
