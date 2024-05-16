@@ -32,6 +32,7 @@ on:
       maven_additional_cli_opts:
         type: string
         required: false
+        default: ''
       artifact_path:
         type: string
         required: false
