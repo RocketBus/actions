@@ -487,7 +487,7 @@ jobs:
           app_version: ${{ steps.build_docker.outputs.image_tag }}
 
       - name: Create SBOM File
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@v0.15.11
         with:
           path: '.'
           format: spdx-json
