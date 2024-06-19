@@ -59,6 +59,11 @@ runs:
       shell: bash
       run: npm install --global yarn
 
+    - name: Install Pnpm
+      if: ${{ inputs.node_package_manager == 'pnpm' }}
+      shell: bash
+      run: npm install --global pnpm
+
     - name: Set up Node.js (yarn)
       if: ${{ inputs.node_package_manager == 'yarn' }}
       uses: actions/setup-node@v4
@@ -66,8 +71,15 @@ runs:
         node-version: ${{ inputs.node_version }}
         cache: yarn
 
+    - name: Set up Node.js (pnpm)
+      if: ${{ inputs.node_package_manager == 'pnpm' }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node_version }}
+        cache: pnpm
+
     - name: Create .npmrc
-      if: ${{ inputs.node_package_manager == 'npm' && inputs.npmrc }}
+      if: ${{ (inputs.node_package_manager == 'npm' || inputs.node_package_manager == 'pnpm') && inputs.npmrc }}
       shell: bash
       run: echo "$NPMRC" > ~/.npmrc
       env:
@@ -107,6 +119,9 @@ runs:
         if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then
           yarn version --new-version $PACKAGE_VERSION --no-git-tag-version
         fi
+        if [[ $NODE_PACKAGE_MANAGER == 'pnpm' ]]; then
+          pnpm version $PACKAGE_VERSION --no-git-tag-version --allow-same-version
+        fi
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
@@ -116,6 +131,7 @@ runs:
       run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
         if [[ $NODE_PACKAGE_MANAGER == 'yarn' ]]; then yarn install --frozen-lockfile --ignore-engines; fi
+        if [[ $NODE_PACKAGE_MANAGER == 'pnpm' ]]; then pnpm install --frozen-lockfile; fi
       env:
         NODE_PACKAGE_MANAGER: ${{ inputs.node_package_manager }}
 
