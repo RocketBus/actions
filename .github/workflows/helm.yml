@@ -123,36 +123,36 @@ jobs:
           env_spec: ${{ vars.ENV_SPEC }}
           environment: stg
 
-  # approval:
-  #   name: Approval
-  #   if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'live' }}
-  #   runs-on: actions-runner-set
-  #   steps:
-  #     - name: Send Approval
-  #       id: send_approval
-  #       uses: varu3/slack-approval@main
-  #       continue-on-error: true
-  #       env:
-  #         SLACK_APP_TOKEN: ${{ secrets.slack_app_token }}
-  #         SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
-  #         SLACK_SIGNING_SECRET: ${{ secrets.slack_signing_secret }}
-  #         SLACK_CHANNEL_ID: C05JR25JH63 # acme-approval
-  #       timeout-minutes: 10
+  approval:
+    name: Approval
+    if: ${{ github.ref_name == github.event.repository.default_branch && inputs.environment == 'live' }}
+    runs-on: actions-runner-set
+    steps:
+      - name: Send Approval
+        id: send_approval
+        uses: varu3/slack-approval@main
+        continue-on-error: true
+        env:
+          SLACK_APP_TOKEN: ${{ secrets.slack_app_token }}
+          SLACK_BOT_TOKEN: ${{ secrets.slack_bot_token }}
+          SLACK_SIGNING_SECRET: ${{ secrets.slack_signing_secret }}
+          SLACK_CHANNEL_ID: C05JR25JH63 # acme-approval
+        timeout-minutes: 10
 
-  #     - name: Approval Status
-  #       id: approval_status
-  #       run: echo result=${{ steps.send_approval.outcome }} >> $GITHUB_OUTPUT
-  #   outputs:
-  #     status: ${{ steps.approval_status.outputs.result }}
+      - name: Approval Status
+        id: approval_status
+        run: echo result=${{ steps.send_approval.outcome }} >> $GITHUB_OUTPUT
+    outputs:
+      status: ${{ steps.approval_status.outputs.result }}
 
   live:
     name: Live
-    # if: ${{ needs.approval.outputs.status == 'success' }}
+    if: ${{ needs.approval.outputs.status == 'success' }}
     environment:
       name: live
     runs-on: actions-runner-set
-    # needs:
-    #   - approval
+    needs:
+      - approval
     steps:
       - name: Checkout
         uses: actions/checkout@v3
