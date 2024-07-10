@@ -113,7 +113,7 @@ jobs:
     steps:
       - name: Send Approval
         id: send_approval
-        uses: varu3/slack-approval@main
+        uses: RocketBus/slack-approval@main
         continue-on-error: true
         env:
           SLACK_APP_TOKEN: ${{ secrets.SLACK_APP_TOKEN }}
