@@ -191,7 +191,7 @@ jobs:
 
       - name: Lint Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@lock-files
+        uses: RocketBus/actions/.github/actions/nodejs@v1
         with:
           stage: 'lint'
           node_version: ${{ inputs.node_version }}
