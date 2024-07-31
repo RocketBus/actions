@@ -53,6 +53,11 @@ runs:
       with:
         node-version: ${{ inputs.node_version }}
         cache: npm
+        cache-dependency-path: |
+          package-lock.json
+          npm-shrinkwrap.json
+          yarn.lock
+          pnpm-lock.yaml
 
     - name: Install Yarn
       if: ${{ inputs.node_package_manager == 'yarn' }}
