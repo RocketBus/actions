@@ -117,6 +117,7 @@ runs:
         PACKAGE_VERSION: ${{ inputs.package_version }}
 
     - name: Release Prepare
+      if: ${{ inputs.stage != 'release' }}
       shell: bash
       run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then
