@@ -542,7 +542,7 @@ jobs:
 
       - name: Release Node.js
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'nodejs') }}
-        uses: RocketBus/actions/.github/actions/nodejs@v1
+        uses: RocketBus/actions/.github/actions/nodejs@remove-install-from-release
         with:
           stage: 'release'
           node_version: ${{ inputs.node_version }}
