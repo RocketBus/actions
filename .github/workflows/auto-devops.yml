@@ -380,7 +380,7 @@ jobs:
   build:
     name: Build
     runs-on: actions-runner-set
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
+    if: ${{ always() && needs.preflight.result == 'success' }}
     needs: 
       - preflight
     steps:
