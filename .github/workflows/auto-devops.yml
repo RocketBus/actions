@@ -380,11 +380,8 @@ jobs:
   build:
     name: Build
     runs-on: actions-runner-set
-    if: ${{ always() && needs.preflight.result == 'success' && (needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.test.result == 'success' || needs.test.result == 'skipped') }}
     needs: 
       - preflight
-      - lint
-      - test
     steps:
       - name: Checkout
         uses: actions/checkout@v4

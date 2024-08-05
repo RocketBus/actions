@@ -49,6 +49,7 @@ runs:
   using: "composite"
   steps:
     - name: Set up Node.js (npm)
+      if: ${{ inputs.stage != 'release' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
@@ -60,38 +61,38 @@ runs:
           pnpm-lock.yaml
 
     - name: Install Yarn
-      if: ${{ inputs.node_package_manager == 'yarn' }}
+      if: ${{ inputs.node_package_manager == 'yarn' && inputs.stage != 'release' }}
       shell: bash
       run: npm install --global yarn
 
     - name: Install Pnpm
-      if: ${{ inputs.node_package_manager == 'pnpm' }}
+      if: ${{ inputs.node_package_manager == 'pnpm' && inputs.stage != 'release' }}
       shell: bash
       run: npm install --global pnpm
 
     - name: Set up Node.js (yarn)
-      if: ${{ inputs.node_package_manager == 'yarn' }}
+      if: ${{ inputs.node_package_manager == 'yarn' && inputs.stage != 'release' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         cache: yarn
 
     - name: Set up Node.js (pnpm)
-      if: ${{ inputs.node_package_manager == 'pnpm' }}
+      if: ${{ inputs.node_package_manager == 'pnpm' && inputs.stage != 'release' }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node_version }}
         cache: pnpm
 
     - name: Create .npmrc
-      if: ${{ (inputs.node_package_manager == 'npm' || inputs.node_package_manager == 'pnpm') && inputs.npmrc }}
+      if: ${{ (inputs.node_package_manager == 'npm' || inputs.node_package_manager == 'pnpm') && inputs.npmrc && inputs.stage != 'release' }}
       shell: bash
       run: echo "$NPMRC" > ~/.npmrc
       env:
         NPMRC: ${{ inputs.npmrc }}
 
     - name: Create .yarnrc.yml
-      if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc }}
+      if: ${{ inputs.node_package_manager == 'yarn' && inputs.yarnrc && inputs.stage != 'release' }}
       shell: bash
       run: echo "$YARNRC" > ~/.yarnrc.yml
       env:
@@ -116,6 +117,7 @@ runs:
         PACKAGE_VERSION: ${{ inputs.package_version }}
 
     - name: Release Prepare
+      if: ${{ inputs.stage != 'release' }}
       shell: bash
       run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then
@@ -132,6 +134,7 @@ runs:
         PACKAGE_VERSION: ${{ steps.metadata.outputs.package_version }}
 
     - name: Install Dependencies
+      if: ${{ inputs.stage != 'release' }}
       shell: bash
       run: |
         if [[ $NODE_PACKAGE_MANAGER == 'npm' ]]; then npm ci; fi
