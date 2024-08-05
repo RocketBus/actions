@@ -488,8 +488,8 @@ jobs:
         with:
           path: '.'
           format: spdx-json
-          output-file: sbom.spdx.json
-          artifact-name: sbom.spdx.json
+          output-file: ${{ inputs.environment }}-sbom.spdx.json
+          artifact-name: ${{ inputs.environment }}-sbom.spdx.json
           upload-artifact-retention: 1d
 
   sca:
@@ -504,13 +504,13 @@ jobs:
     steps:
       - uses: actions/download-artifact@v3
         with:
-          name: sbom.spdx.json
+          name: ${{ inputs.environment }}-sbom.spdx.json
 
       - name: Scan SBOM
         id: scan
         uses: anchore/scan-action@v3
         with:
-          sbom: sbom.spdx.json
+          sbom: ${{ inputs.environment }}-sbom.spdx.json
           fail-build: ${{ inputs.scan_fail_build }}
           severity-cutoff: low
           output-format: table
