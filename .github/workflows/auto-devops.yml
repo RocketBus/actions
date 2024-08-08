@@ -238,6 +238,8 @@ jobs:
           actions_iam_role: ${{ vars.ACTIONS_IAM_ROLE }}
           image_name: ${{ env.DOCKER_IMAGE_NAME }}
           image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
           dockerfile: ${{ inputs.dockerfile }}
 
       - name: Lint Chart
@@ -470,6 +472,8 @@ jobs:
           docker_build_args: ${{ inputs.docker_build_args }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
 
       - name: Build Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
@@ -597,6 +601,8 @@ jobs:
           image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
 
       - name: Release Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') }}
@@ -655,6 +661,8 @@ jobs:
           image_tag: ${{ format('{0}{1}', needs.preflight.outputs.gitversion_semver, inputs.environment && format('-{0}', inputs.environment)) }}
           artifact_bucket_region: ${{ vars.ARTIFACTS_BUCKET_REGION }}
           artifact_bucket_name: ${{ vars.ARTIFACTS_BUCKET_NAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub_username: ${{ vars.DOCKERHUB_USERNAME }}
 
       - name: Clean up Chart
         if: ${{ contains(fromJSON(needs.preflight.outputs.buildpacks), 'chart') && (cancelled() || failure()) }}
